@@ -574,23 +574,29 @@ async function authSignIn(email){
 }
 
 async function authGetSession(){
-  // Lire le token depuis l'URL (magic link) ou localStorage
   const hash = window.location.hash;
   if(hash.includes('access_token')){
     const params = new URLSearchParams(hash.replace('#',''));
     const token = params.get('access_token');
-    if(token){
-      localStorage.setItem('sq_token', token);
-      window.location.hash = '';
-    }
+    if(token){ localStorage.setItem('sq_token', token); window.location.hash = ''; }
   }
   const token = localStorage.getItem('sq_token');
   if(!token) return null;
-  const r = await fetch(SUPA_URL+'/auth/v1/user', {
-    headers:{...HEADERS,'Authorization':'Bearer '+token}
-  });
-  if(!r.ok){ localStorage.removeItem('sq_token'); return null; }
-  return r.json();
+  // Timeout de 3s pour ne pas bloquer
+  const controller = new AbortController();
+  const t = setTimeout(()=>controller.abort(), 3000);
+  try{
+    const r = await fetch(SUPA_URL+'/auth/v1/user', {
+      headers:{...HEADERS,'Authorization':'Bearer '+token},
+      signal: controller.signal
+    });
+    clearTimeout(t);
+    if(!r.ok){ localStorage.removeItem('sq_token'); return null; }
+    return r.json();
+  }catch(e){
+    clearTimeout(t);
+    return null;
+  }
 }
 
 async function authSignOut(){
@@ -881,40 +887,49 @@ async function fmSave(){
 }
 
 async function init(){
-  // Timeout de sécurité — l'écran de chargement disparaît au bout de 8s quoi qu'il arrive
-  const safetyTimer = setTimeout(()=>{
-    document.getElementById('loading-screen').classList.add('hidden');
-  }, 8000);
-
   initDark();
 
+  // L'écran de chargement disparaît immédiatement — l'auth tourne en arrière-plan
   const params=new URLSearchParams(location.search);
   const matchId=params.get('match');
   setSyncDot('loading');
-  try{
-    try{
-      currentUser = await authGetSession();
-      if(currentUser) currentProfile = await loadProfile(currentUser.id);
-    }catch(e){ console.warn('Auth check failed silently', e); }
-    updateDrawerUser();
 
+  // 1. Cacher l'écran de chargement après 1.5s max, quelle que soit l'issue
+  const hideLoader = () => {
+    document.getElementById('loading-screen').classList.add('hidden');
+  };
+  const loaderTimer = setTimeout(hideLoader, 1500);
+
+  // 2. Auth en arrière-plan — ne bloque pas l'UI
+  authGetSession().then(user=>{
+    currentUser = user;
+    if(user) return loadProfile(user.id).then(p=>{ currentProfile=p; updateDrawerUser(); });
+  }).catch(e=>console.warn('Auth silently failed',e));
+
+  // 3. Charger les données app
+  try{
     PLAYERS=await dbGet('players','order=n.asc');
     MATCHES=await dbGet('matches','order=date.desc');
     await fmLoad();
     setSyncDot('ok');
-    clearTimeout(safetyTimer);
-    document.getElementById('loading-screen').classList.add('hidden');
+    clearTimeout(loaderTimer);
+    hideLoader();
     if(matchId){await initRatingPage(parseInt(matchId));}
     else{initFeuille();}
   }catch(err){
-    clearTimeout(safetyTimer);
+    clearTimeout(loaderTimer);
+    hideLoader();
     setSyncDot('err');
     console.error('Squadra init error:', err);
-    document.getElementById('loading-screen').innerHTML=
-      '<div class="loading-logo">Squa<span>dra</span></div>'
-      +'<div style="font-size:13px;color:var(--muted);text-align:center;padding:0 32px;font-family:\'Barlow Condensed\',sans-serif;font-weight:700;letter-spacing:1px;text-transform:uppercase;line-height:1.8">Connexion impossible</div>'
-      +'<div style="font-size:11px;color:var(--pink);text-align:center;padding:0 24px;margin-top:8px;word-break:break-all;line-height:1.6;max-width:400px">'+String(err.message)+'</div>'
-      +'<button onclick="location.reload()" style="margin-top:20px;padding:12px 24px;background:var(--volt);color:#000;border:none;border-radius:12px;font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:14px;letter-spacing:2px;text-transform:uppercase;cursor:pointer">Réessayer</button>';
+    // Afficher l'erreur dans le contenu, pas dans le loader qui bloque
+    document.getElementById('fm-body').innerHTML=
+      '<div style="text-align:center;padding:40px 16px">'
+      +'<div style="font-size:32px;margin-bottom:16px">⚠️</div>'
+      +'<div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:20px;text-transform:uppercase;margin-bottom:8px;color:var(--text)">Connexion impossible</div>'
+      +'<div style="font-size:13px;color:var(--muted);margin-bottom:20px;word-break:break-all">'+String(err.message).slice(0,120)+'</div>'
+      +'<button onclick="location.reload()" class="btn btn-volt">Réessayer</button>'
+      +'</div>';
+    switchPage('feuille','feuille');
   }
 }
 
