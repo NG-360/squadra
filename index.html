@@ -123,7 +123,8 @@ body.dark .info-box{border-color:rgba(200,255,0,0.15);color:rgba(200,255,0,0.8)}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--volt);color:#000;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;letter-spacing:1px;text-transform:uppercase;padding:10px 22px;border-radius:30px;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;z-index:999}
 .toast.err{background:var(--pink);color:#fff}.toast.show{opacity:1}
 
-.loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;gap:20px}
+.loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;gap:20px;transition:opacity .3s}
+.loading-screen.hidden{opacity:0;pointer-events:none}
 .loading-logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:44px;text-transform:uppercase;letter-spacing:-1px}
 .loading-logo span{color:var(--volt)}
 .loading-spinner{width:28px;height:28px;border:2px solid var(--surface3);border-top-color:var(--volt);border-radius:50%;animation:spin .7s linear infinite}
@@ -880,31 +881,33 @@ async function fmSave(){
 }
 
 async function init(){
-  // Dark mode en premier (avant le rendu)
+  // Timeout de sécurité — l'écran de chargement disparaît au bout de 8s quoi qu'il arrive
+  const safetyTimer = setTimeout(()=>{
+    document.getElementById('loading-screen').classList.add('hidden');
+  }, 8000);
+
   initDark();
 
   const params=new URLSearchParams(location.search);
   const matchId=params.get('match');
   setSyncDot('loading');
   try{
-    // Vérifier la session utilisateur (magic link ou token stocké)
     try{
       currentUser = await authGetSession();
-      if(currentUser){
-        currentProfile = await loadProfile(currentUser.id);
-      }
+      if(currentUser) currentProfile = await loadProfile(currentUser.id);
     }catch(e){ console.warn('Auth check failed silently', e); }
     updateDrawerUser();
 
-    // Charger les données
     PLAYERS=await dbGet('players','order=n.asc');
     MATCHES=await dbGet('matches','order=date.desc');
     await fmLoad();
     setSyncDot('ok');
-    document.getElementById('loading-screen').style.display='none';
+    clearTimeout(safetyTimer);
+    document.getElementById('loading-screen').classList.add('hidden');
     if(matchId){await initRatingPage(parseInt(matchId));}
     else{initFeuille();}
   }catch(err){
+    clearTimeout(safetyTimer);
     setSyncDot('err');
     console.error('Squadra init error:', err);
     document.getElementById('loading-screen').innerHTML=
