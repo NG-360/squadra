@@ -10,33 +10,30 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  /* Mode jour (défaut) */
-  --bg:#F5F5F3;--surface:#FFFFFF;--surface2:#F0F0EE;--surface3:#E5E5E2;
-  --volt:#8AB800;--volt-dim:rgba(138,184,0,0.10);--volt-glow:rgba(138,184,0,0.20);
-  --volt-ui:#C8FF00;
+  --bg:#F5F5F3;--surface:#FFFFFF;--surface2:#EFEFED;--surface3:#E5E5E2;
+  --volt:#8AB800;--volt-dim:rgba(138,184,0,0.10);
   --pink:#FF2D78;--pink-dim:rgba(255,45,120,0.08);
   --text:#0A0A0A;--muted:#888;--border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.16);
   --radius:14px;--radius-sm:8px;
-  --header-bg:#0A0A0A;--header-text:#F0F0F0;
+  --hbg:#0A0A0A;--htext:#F0F0F0;--hvolt:#C8FF00;
 }
 body.dark{
   --bg:#0D0D0D;--surface:#161616;--surface2:#1F1F1F;--surface3:#2A2A2A;
-  --volt:#C8FF00;--volt-dim:rgba(200,255,0,0.10);--volt-glow:rgba(200,255,0,0.20);
-  --volt-ui:#C8FF00;
+  --volt:#C8FF00;--volt-dim:rgba(200,255,0,0.10);
   --text:#F0F0F0;--muted:#555;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.14);
-  --header-bg:#161616;--header-text:#F0F0F0;
+  --hbg:#161616;--htext:#F0F0F0;--hvolt:#C8FF00;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
 .bc{font-family:'Barlow Condensed',sans-serif}
 
-header{height:60px;background:var(--header-bg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;position:sticky;top:0;z-index:20}
-.sq-logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;letter-spacing:-1px;color:var(--header-text);text-transform:uppercase}
-.sq-logo span{color:var(--volt-ui)}
-.burger{position:absolute;left:16px;background:none;border:none;cursor:pointer;padding:6px;display:flex;flex-direction:column;gap:5px}
-.burger span{display:block;width:20px;height:2px;background:rgba(255,255,255,0.5);border-radius:2px}
+header{height:60px;background:var(--hbg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;position:sticky;top:0;z-index:20}
+.sq-logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;letter-spacing:-1px;color:var(--htext);text-transform:uppercase}
+.sq-logo span{color:var(--hvolt)}
+.burger{position:absolute;left:16px;background:none;border:none;cursor:pointer;padding:8px;display:flex;flex-direction:column;gap:5px;z-index:21}
+.burger span{display:block;width:20px;height:2px;background:rgba(255,255,255,0.7);border-radius:2px}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.3);display:inline-block;margin-left:8px;vertical-align:middle;transition:background .3s}
-.sync-dot.ok{background:var(--volt-ui)}.sync-dot.loading{background:#f5c400}.sync-dot.err{background:var(--pink)}
+.sync-dot.ok{background:var(--hvolt)}.sync-dot.loading{background:#f5c400}.sync-dot.err{background:var(--pink)}
 
 .drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:50;opacity:0;pointer-events:none;transition:opacity .25s}
 .drawer-overlay.open{opacity:1;pointer-events:all}
@@ -71,59 +68,13 @@ main{padding:16px;max-width:520px;margin:0 auto}
 .fld{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-size:14px;color:var(--text);font-family:'Inter',sans-serif;width:100%}
 .fld::placeholder{color:var(--muted)}.fld option{background:var(--surface2)}.fld:focus{outline:none;border-color:var(--volt)}
 .sep{border:none;border-top:1px solid var(--border);margin:18px 0}
-.info-box{background:var(--volt-dim);border:1px solid rgba(138,184,0,0.2);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--volt);margin-bottom:12px;line-height:1.6}
-body.dark .info-box{border-color:rgba(200,255,0,0.15);color:rgba(200,255,0,0.8)}
-
-/* Auth & Profil */
-.auth-screen{display:flex;flex-direction:column;align-items:center;padding:40px 0 20px;text-align:center}
-.auth-logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:48px;text-transform:uppercase;letter-spacing:-2px;margin-bottom:4px}
-.auth-logo span{color:var(--volt)}
-.auth-tagline{font-size:14px;color:var(--muted);margin-bottom:36px}
-.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;width:100%;text-align:left}
-.auth-card-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;color:var(--text)}
-.auth-card-sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5}
-.auth-step{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
-.auth-step:last-child{border-bottom:none}
-.auth-step-num{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:var(--volt);min-width:24px;line-height:1}
-.auth-step-text{font-size:13px;color:var(--muted);line-height:1.5}
-.auth-divider{display:flex;align-items:center;gap:12px;margin:16px 0}
-.auth-divider-line{flex:1;height:1px;background:var(--border)}
-.auth-divider-text{font-size:11px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;text-transform:uppercase}
-
-/* Profil public */
-.profile-public-hero{background:var(--header-bg);border-radius:20px;padding:28px 24px 24px;margin-bottom:12px;position:relative;overflow:hidden}
-.profile-public-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:var(--volt-glow);filter:blur(40px);pointer-events:none}
-.profile-public-avatar{font-size:56px;line-height:1;margin-bottom:12px;position:relative;z-index:1}
-.profile-public-name{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;text-transform:uppercase;letter-spacing:-0.5px;color:#fff;line-height:1;position:relative;z-index:1}
-.profile-public-pseudo{font-size:14px;color:rgba(255,255,255,0.5);margin-top:4px;position:relative;z-index:1}
-.profile-public-loc{font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px;position:relative;z-index:1}
-.profile-public-desc{font-size:14px;color:var(--text);line-height:1.6;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}
-.profile-edit-section{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:12px}
-.profile-edit-section-title{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
-.profile-field{margin-bottom:12px}
-.profile-field-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:block}
-.avatar-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:8px}
-.avatar-opt{font-size:24px;text-align:center;padding:6px;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all .12s}
-.avatar-opt:hover{background:var(--surface2)}
-.avatar-opt.selected{border-color:var(--volt);background:var(--volt-dim)}
-
-/* Drawer user info */
-.drawer-user{padding:16px 20px;border-top:1px solid var(--border);margin-top:auto}
-.drawer-user-info{display:flex;align-items:center;gap:10px;cursor:pointer}
-.drawer-user-avatar{font-size:22px;width:36px;height:36px;background:var(--surface2);border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid var(--border)}
-.drawer-user-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;text-transform:uppercase;color:var(--text)}
-.drawer-user-sub{font-size:11px;color:var(--muted)}
-.drawer-dark-toggle{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-top:1px solid var(--border)}
-.dark-toggle-label{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
-.dark-toggle-btn{width:44px;height:24px;border-radius:12px;background:var(--surface3);border:1px solid var(--border);position:relative;cursor:pointer;transition:background .2s}
-.dark-toggle-btn.on{background:var(--volt)}
-.dark-toggle-knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
-.dark-toggle-btn.on .dark-toggle-knob{transform:translateX(20px)}
+.info-box{background:var(--volt-dim);border:1px solid rgba(200,255,0,0.15);border-radius:10px;padding:10px 14px;font-size:12px;color:rgba(200,255,0,0.8);margin-bottom:12px;line-height:1.6}
 
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--volt);color:#000;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;letter-spacing:1px;text-transform:uppercase;padding:10px 22px;border-radius:30px;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;z-index:999}
 .toast.err{background:var(--pink);color:#fff}.toast.show{opacity:1}
 
-.loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;gap:20px;transition:opacity .3s}
+.loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:199;gap:20px;transition:opacity .4s;pointer-events:none}
+.loading-screen.visible{pointer-events:all;opacity:1}
 .loading-screen.hidden{opacity:0;pointer-events:none}
 .loading-logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:44px;text-transform:uppercase;letter-spacing:-1px}
 .loading-logo span{color:var(--volt)}
@@ -345,7 +296,7 @@ body.dark .info-box{border-color:rgba(200,255,0,0.15);color:rgba(200,255,0,0.8)}
 </head>
 <body>
 
-<div class="loading-screen" id="loading-screen">
+<div class="loading-screen visible" id="loading-screen">
   <div class="loading-logo">Squa<span>dra</span></div>
   <div class="loading-spinner"></div>
   <div style="font-size:12px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:2px;text-transform:uppercase">Connexion...</div>
@@ -380,29 +331,19 @@ body.dark .info-box{border-color:rgba(200,255,0,0.15);color:rgba(200,255,0,0.8)}
     <button class="drawer-item" id="nav-admin" onclick="switchPage('admin',this)">
       <span class="drawer-item-icon">🔐</span><span class="drawer-item-label">Admin</span>
     </button>
+    <div class="drawer-sep"></div>
+    <button class="drawer-item" id="nav-profil" onclick="switchPage('profil',this)">
+      <span class="drawer-item-icon">👤</span><span class="drawer-item-label" id="drawer-profil-label">Mon profil</span>
+    </button>
+    <button class="drawer-item" onclick="toggleDark();closeDrawer()">
+      <span class="drawer-item-icon" id="dark-icon">🌙</span>
+      <span class="drawer-item-label" id="dark-label">Mode nuit</span>
+    </button>
   </nav>
-  <!-- Dark mode toggle -->
-  <div class="drawer-dark-toggle">
-    <span class="dark-toggle-label" id="dark-label">Mode nuit</span>
-    <div class="dark-toggle-btn" id="dark-toggle-btn" onclick="toggleDark()">
-      <div class="dark-toggle-knob"></div>
-    </div>
-  </div>
-  <!-- User info / connexion -->
-  <div class="drawer-user" id="drawer-user-zone">
-    <div class="drawer-user-info" onclick="switchPage('profil',null);closeDrawer()" id="drawer-user-info">
-      <div class="drawer-user-avatar" id="drawer-avatar">👤</div>
-      <div>
-        <div class="drawer-user-name" id="drawer-user-name">Mon profil</div>
-        <div class="drawer-user-sub" id="drawer-user-sub">Se connecter</div>
-      </div>
-    </div>
-  </div>
-</div><!-- fin drawer -->
+</div>
 
 <main>
 
-<!-- ═══ PROFIL / AUTH ═══ -->
 <div class="page" id="page-profil">
   <div id="profil-content" style="padding-top:12px"></div>
 </div>
@@ -560,85 +501,6 @@ const SUPA_KEY='sb_publishable_QM8b0eBjeUdMA3IF32KZCA_-UgFvxts';
 const HEADERS={'Content-Type':'application/json','apikey':SUPA_KEY};
 const ADMIN_PWD='squadra';
 
-// Auth helpers via Supabase REST
-let currentUser = null;
-let currentProfile = null;
-
-async function authSignIn(email){
-  const r = await fetch(SUPA_URL+'/auth/v1/otp', {
-    method:'POST',
-    headers:{...HEADERS,'Content-Type':'application/json'},
-    body: JSON.stringify({email, create_user:true})
-  });
-  if(!r.ok) throw new Error(await r.text());
-}
-
-async function authGetSession(){
-  const hash = window.location.hash;
-  if(hash.includes('access_token')){
-    const params = new URLSearchParams(hash.replace('#',''));
-    const token = params.get('access_token');
-    if(token){ localStorage.setItem('sq_token', token); window.location.hash = ''; }
-  }
-  const token = localStorage.getItem('sq_token');
-  if(!token) return null;
-  // Timeout de 3s pour ne pas bloquer
-  const controller = new AbortController();
-  const t = setTimeout(()=>controller.abort(), 3000);
-  try{
-    const r = await fetch(SUPA_URL+'/auth/v1/user', {
-      headers:{...HEADERS,'Authorization':'Bearer '+token},
-      signal: controller.signal
-    });
-    clearTimeout(t);
-    if(!r.ok){ localStorage.removeItem('sq_token'); return null; }
-    return r.json();
-  }catch(e){
-    clearTimeout(t);
-    return null;
-  }
-}
-
-async function authSignOut(){
-  const token = localStorage.getItem('sq_token');
-  if(token){
-    await fetch(SUPA_URL+'/auth/v1/logout', {
-      method:'POST',
-      headers:{...HEADERS,'Authorization':'Bearer '+token}
-    }).catch(()=>{});
-  }
-  localStorage.removeItem('sq_token');
-  currentUser = null;
-  currentProfile = null;
-  updateDrawerUser();
-}
-
-function getAuthHeaders(){
-  const token = localStorage.getItem('sq_token');
-  return token ? {...HEADERS,'Authorization':'Bearer '+token} : HEADERS;
-}
-
-async function loadProfile(userId){
-  const r = await fetch(SUPA_URL+'/rest/v1/profiles?id=eq.'+userId, {
-    headers:{...getAuthHeaders(),'Prefer':'return=representation'}
-  });
-  if(!r.ok) return null;
-  const rows = await r.json();
-  return rows.length ? rows[0] : null;
-}
-
-async function saveProfile(data){
-  const token = localStorage.getItem('sq_token');
-  if(!token || !currentUser) return;
-  const r = await fetch(SUPA_URL+'/rest/v1/profiles?id=eq.'+currentUser.id, {
-    method:'PATCH',
-    headers:{...getAuthHeaders(),'Prefer':'return=representation'},
-    body: JSON.stringify({...data, updated_at: new Date().toISOString()})
-  });
-  if(!r.ok) throw new Error(await r.text());
-  return r.json();
-}
-
 async function dbGet(t,p=''){const r=await fetch(SUPA_URL+'/rest/v1/'+t+'?'+p,{headers:{...HEADERS,'Prefer':'return=representation'}});if(!r.ok)throw new Error(await r.text());return r.json();}
 async function dbInsert(t,d){const r=await fetch(SUPA_URL+'/rest/v1/'+t,{method:'POST',headers:{...HEADERS,'Prefer':'return=representation'},body:JSON.stringify(d)});if(!r.ok)throw new Error(await r.text());return r.json();}
 async function dbUpdate(t,name,d){const r=await fetch(SUPA_URL+'/rest/v1/'+t+'?n=eq.'+encodeURIComponent(name),{method:'PATCH',headers:{...HEADERS,'Prefer':'return=representation'},body:JSON.stringify(d)});if(!r.ok)throw new Error(await r.text());return r.json();}
@@ -660,203 +522,8 @@ let _stats={};
 
 function avg(p){return(p.atk+p.def+p.phy+p.tec+p.men)/5;}
 
-// ── Dark mode ──
-function toggleDark(){
-  const isDark = document.body.classList.toggle('dark');
-  localStorage.setItem('sq_dark', isDark?'1':'0');
-  document.getElementById('dark-toggle-btn').classList.toggle('on', isDark);
-  document.getElementById('dark-label').textContent = isDark ? 'Mode jour' : 'Mode nuit';
-}
-function initDark(){
-  const isDark = localStorage.getItem('sq_dark')==='1';
-  if(isDark){
-    document.body.classList.add('dark');
-    document.getElementById('dark-toggle-btn').classList.add('on');
-    document.getElementById('dark-label').textContent = 'Mode jour';
-  }
-}
-
-// ── Drawer user zone ──
-function updateDrawerUser(){
-  const avatarEl = document.getElementById('drawer-avatar');
-  const nameEl   = document.getElementById('drawer-user-name');
-  const subEl    = document.getElementById('drawer-user-sub');
-  if(currentProfile && (currentProfile.prenom || currentProfile.pseudo)){
-    avatarEl.textContent = currentProfile.avatar || '⚽';
-    nameEl.textContent   = currentProfile.pseudo || (currentProfile.prenom+' '+currentProfile.nom).trim();
-    subEl.textContent    = 'Voir mon profil';
-  } else if(currentUser){
-    avatarEl.textContent = '👤';
-    nameEl.textContent   = 'Mon profil';
-    subEl.textContent    = 'Compléter mon profil';
-  } else {
-    avatarEl.textContent = '👤';
-    nameEl.textContent   = 'Mon profil';
-    subEl.textContent    = 'Se connecter';
-  }
-}
-
-// ── Page Profil ──
-function renderProfilPage(){
-  const el = document.getElementById('profil-content');
-  if(!currentUser){
-    renderAuthPage(el);
-  } else {
-    renderProfileEdit(el);
-  }
-}
-
-const AVATAR_OPTS = ['⚽','🦁','🐯','🦊','🐺','🐻','🦅','🐉','🦄','🔥','⚡','🌊','🏔','🎯','💎','👑','🥷','🚀','🛡','⚔','🥊','🏆','🌙','💪','🎪','🌪','🍀','😎','🤙','💫'];
-
-function renderAuthPage(el){
-  el.innerHTML = `
-    <div class="auth-screen">
-      <div class="auth-logo">Squa<span>dra</span></div>
-      <div class="auth-tagline">Ton identité dans le foot</div>
-    </div>
-    <div class="auth-card" style="margin-bottom:16px">
-      <div class="auth-card-title">Créer mon profil</div>
-      <div class="auth-card-sub">Entre ton email pour recevoir un lien de connexion — pas de mot de passe à retenir.</div>
-      <div class="profile-field">
-        <label class="profile-field-label">Adresse email</label>
-        <input type="email" class="fld" id="auth-email" placeholder="ton@email.com" autocomplete="email">
-      </div>
-      <button class="btn btn-volt" onclick="handleSignIn()" style="margin-bottom:0">Recevoir mon lien ✉️</button>
-      <div id="auth-feedback" style="margin-top:10px;font-size:13px;text-align:center;color:var(--muted)"></div>
-    </div>
-    <div class="auth-card">
-      <div class="auth-card-title" style="font-size:14px;margin-bottom:12px">Comment ça marche</div>
-      <div class="auth-step">
-        <div class="auth-step-num">1</div>
-        <div class="auth-step-text">Tu entres ton email et tu cliques sur le bouton</div>
-      </div>
-      <div class="auth-step">
-        <div class="auth-step-num">2</div>
-        <div class="auth-step-text">Tu reçois un email avec un lien magique (vérifie tes spams)</div>
-      </div>
-      <div class="auth-step">
-        <div class="auth-step-num">3</div>
-        <div class="auth-step-text">Tu cliques sur le lien et tu es connecté automatiquement</div>
-      </div>
-      <div class="auth-step">
-        <div class="auth-step-num">4</div>
-        <div class="auth-step-text">Tu complètes ton profil public et c'est parti</div>
-      </div>
-    </div>`;
-}
-
-async function handleSignIn(){
-  const email = document.getElementById('auth-email').value.trim();
-  const fb = document.getElementById('auth-feedback');
-  if(!email || !email.includes('@')){fb.textContent='Email invalide.';fb.style.color='var(--pink)';return;}
-  fb.textContent='Envoi en cours...';fb.style.color='var(--muted)';
-  try{
-    await authSignIn(email);
-    fb.innerHTML='✅ <strong>Email envoyé !</strong> Vérifie ta boîte mail (et tes spams). Clique sur le lien pour te connecter.';
-    fb.style.color='var(--volt)';
-  }catch(err){
-    fb.textContent='Erreur : '+err.message;
-    fb.style.color='var(--pink)';
-  }
-}
-
-let editAvatar = '⚽';
-
-function renderProfileEdit(el){
-  const p = currentProfile || {};
-  editAvatar = p.avatar || '⚽';
-  el.innerHTML = `
-    <div class="profile-public-hero">
-      <div class="profile-public-avatar" id="preview-avatar">${editAvatar}</div>
-      <div class="profile-public-name">${esc(p.prenom||'')} ${esc(p.nom||'')}</div>
-      <div class="profile-public-pseudo">${p.pseudo ? '@'+esc(p.pseudo) : 'Choisis un pseudo'}</div>
-      <div class="profile-public-loc">${p.code_postal ? '📍 '+esc(p.code_postal) : ''}</div>
-    </div>
-
-    ${p.description ? `<div class="profile-public-desc">"${esc(p.description)}"</div>` : ''}
-
-    <div class="profile-edit-section">
-      <div class="profile-edit-section-title">Mon avatar</div>
-      <div style="font-size:48px;text-align:center;margin-bottom:12px" id="avatar-preview-big">${editAvatar}</div>
-      <div class="avatar-grid" id="avatar-grid">
-        ${AVATAR_OPTS.map(a=>`<div class="avatar-opt${a===editAvatar?' selected':''}" onclick="pickAvatar('${a}')">${a}</div>`).join('')}
-      </div>
-    </div>
-
-    <div class="profile-edit-section">
-      <div class="profile-edit-section-title">Identité</div>
-      <div class="profile-field">
-        <label class="profile-field-label">Prénom</label>
-        <input type="text" class="fld" id="prof-prenom" value="${esc(p.prenom||'')}" placeholder="Ton prénom">
-      </div>
-      <div class="profile-field">
-        <label class="profile-field-label">Nom</label>
-        <input type="text" class="fld" id="prof-nom" value="${esc(p.nom||'')}" placeholder="Ton nom">
-      </div>
-      <div class="profile-field">
-        <label class="profile-field-label">Pseudo</label>
-        <input type="text" class="fld" id="prof-pseudo" value="${esc(p.pseudo||'')}" placeholder="@tonpseudo" autocomplete="off">
-      </div>
-    </div>
-
-    <div class="profile-edit-section">
-      <div class="profile-edit-section-title">Localisation & description</div>
-      <div class="profile-field">
-        <label class="profile-field-label">Code postal</label>
-        <input type="text" class="fld" id="prof-cp" value="${esc(p.code_postal||'')}" placeholder="75001" maxlength="10">
-      </div>
-      <div class="profile-field">
-        <label class="profile-field-label">Description</label>
-        <textarea class="fld" id="prof-desc" rows="3" placeholder="Dis quelques mots sur ton style de jeu..." style="resize:none">${esc(p.description||'')}</textarea>
-      </div>
-    </div>
-
-    <button class="btn btn-volt" onclick="handleSaveProfile()">Enregistrer mon profil</button>
-    <button class="btn btn-ghost" onclick="handleSignOut()" style="margin-bottom:20px">Se déconnecter</button>`;
-}
-
-function pickAvatar(emoji){
-  editAvatar = emoji;
-  document.getElementById('avatar-preview-big').textContent = emoji;
-  document.getElementById('preview-avatar').textContent = emoji;
-  document.querySelectorAll('.avatar-opt').forEach(el=>{
-    el.classList.toggle('selected', el.textContent===emoji);
-  });
-}
-
-async function handleSaveProfile(){
-  if(!currentUser) return;
-  const data = {
-    avatar:      editAvatar,
-    prenom:      document.getElementById('prof-prenom').value.trim(),
-    nom:         document.getElementById('prof-nom').value.trim(),
-    pseudo:      document.getElementById('prof-pseudo').value.trim().replace('@',''),
-    code_postal: document.getElementById('prof-cp').value.trim(),
-    description: document.getElementById('prof-desc').value.trim(),
-    email:       currentUser.email,
-  };
-  setSyncDot('loading');
-  try{
-    await saveProfile(data);
-    currentProfile = {...currentProfile, ...data};
-    setSyncDot('ok');
-    updateDrawerUser();
-    showToast('Profil sauvegardé !');
-    renderProfileEdit(document.getElementById('profil-content'));
-  }catch(err){
-    setSyncDot('err');
-    showToast('Erreur : '+err.message.slice(0,60), true);
-  }
-}
-
-async function handleSignOut(){
-  if(!confirm('Se déconnecter ?')) return;
-  await authSignOut();
-  renderProfilPage();
-  showToast('Déconnecté');
-}
-
-// ── Navigation mise à jour ──
+function openDrawer(){document.getElementById('drawer').classList.add('open');document.getElementById('drawer-overlay').classList.add('open');}
+function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('drawer-overlay').classList.remove('open');}
 
 function switchPage(page,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -865,8 +532,8 @@ function switchPage(page,btn){
   const el=typeof btn==='string'?document.getElementById('nav-'+btn):btn;
   if(el)el.classList.add('active');
   closeDrawer();
-  if(page==='profil')renderProfilPage();
   if(page==='dashboard'){reloadMatches().then(()=>{computeStats();renderDashboard();});}
+  if(page==='profil')renderProfilPage();
   if(page==='feuille')initFeuille();
   if(page==='resultats')reloadMatches().then(renderResults);
   if(page==='stats')reloadMatches().then(()=>{renderStats();renderDuos();});
@@ -887,50 +554,229 @@ async function fmSave(){
 }
 
 async function init(){
-  initDark();
+  // Dark mode immédiat
+  if(localStorage.getItem('sq_dark')==='1'){
+    document.body.classList.add('dark');
+    document.getElementById('dark-icon').textContent='☀️';
+    document.getElementById('dark-label').textContent='Mode jour';
+  }
 
-  // L'écran de chargement disparaît immédiatement — l'auth tourne en arrière-plan
   const params=new URLSearchParams(location.search);
   const matchId=params.get('match');
   setSyncDot('loading');
-
-  // 1. Cacher l'écran de chargement après 1.5s max, quelle que soit l'issue
-  const hideLoader = () => {
-    document.getElementById('loading-screen').classList.add('hidden');
-  };
-  const loaderTimer = setTimeout(hideLoader, 1500);
-
-  // 2. Auth en arrière-plan — ne bloque pas l'UI
-  authGetSession().then(user=>{
-    currentUser = user;
-    if(user) return loadProfile(user.id).then(p=>{ currentProfile=p; updateDrawerUser(); });
-  }).catch(e=>console.warn('Auth silently failed',e));
-
-  // 3. Charger les données app
   try{
     PLAYERS=await dbGet('players','order=n.asc');
     MATCHES=await dbGet('matches','order=date.desc');
     await fmLoad();
     setSyncDot('ok');
-    clearTimeout(loaderTimer);
-    hideLoader();
+    // Cacher le loader
+    const ls=document.getElementById('loading-screen');
+    ls.classList.remove('visible');
+    ls.classList.add('hidden');
     if(matchId){await initRatingPage(parseInt(matchId));}
     else{initFeuille();}
+    // Auth en arrière-plan — ne bloque pas l'UI
+    checkAuth();
   }catch(err){
-    clearTimeout(loaderTimer);
-    hideLoader();
     setSyncDot('err');
     console.error('Squadra init error:', err);
-    // Afficher l'erreur dans le contenu, pas dans le loader qui bloque
-    document.getElementById('fm-body').innerHTML=
-      '<div style="text-align:center;padding:40px 16px">'
-      +'<div style="font-size:32px;margin-bottom:16px">⚠️</div>'
-      +'<div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:20px;text-transform:uppercase;margin-bottom:8px;color:var(--text)">Connexion impossible</div>'
-      +'<div style="font-size:13px;color:var(--muted);margin-bottom:20px;word-break:break-all">'+String(err.message).slice(0,120)+'</div>'
-      +'<button onclick="location.reload()" class="btn btn-volt">Réessayer</button>'
-      +'</div>';
-    switchPage('feuille','feuille');
+    const ls=document.getElementById('loading-screen');
+    ls.innerHTML=
+      '<div class="loading-logo">Squa<span style="color:var(--hvolt)">dra</span></div>'
+      +'<div style="font-size:13px;color:var(--muted);text-align:center;padding:0 32px;font-family:\'Barlow Condensed\',sans-serif;font-weight:700;letter-spacing:1px;text-transform:uppercase">Connexion impossible</div>'
+      +'<div style="font-size:11px;color:var(--pink);text-align:center;padding:8px 24px;word-break:break-all">'+String(err.message).slice(0,120)+'</div>'
+      +'<button onclick="location.reload()" style="padding:12px 24px;background:var(--volt);color:#000;border:none;border-radius:12px;font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:14px;letter-spacing:2px;text-transform:uppercase;cursor:pointer">Réessayer</button>';
   }
+}
+
+// ── Dark mode ──
+function toggleDark(){
+  const dark=document.body.classList.toggle('dark');
+  localStorage.setItem('sq_dark',dark?'1':'0');
+  document.getElementById('dark-icon').textContent=dark?'☀️':'🌙';
+  document.getElementById('dark-label').textContent=dark?'Mode jour':'Mode nuit';
+}
+
+// ── Auth (tourne en arrière-plan, ne bloque jamais l'UI) ──
+let currentUser=null, currentProfile=null;
+
+async function checkAuth(){
+  try{
+    // Récupérer token depuis magic link dans l'URL
+    const hash=window.location.hash;
+    if(hash.includes('access_token')){
+      const p=new URLSearchParams(hash.replace('#',''));
+      const t=p.get('access_token');
+      if(t){localStorage.setItem('sq_token',t);window.location.hash='';}
+    }
+    const token=localStorage.getItem('sq_token');
+    if(!token)return;
+    // Vérifier le token avec un timeout de 4s
+    const ctrl=new AbortController();
+    const tim=setTimeout(()=>ctrl.abort(),4000);
+    const r=await fetch(SUPA_URL+'/auth/v1/user',{
+      headers:{...HEADERS,'Authorization':'Bearer '+token},
+      signal:ctrl.signal
+    });
+    clearTimeout(tim);
+    if(!r.ok){localStorage.removeItem('sq_token');return;}
+    currentUser=await r.json();
+    // Charger le profil
+    const pr=await fetch(SUPA_URL+'/rest/v1/profiles?id=eq.'+currentUser.id,{
+      headers:{...HEADERS,'Authorization':'Bearer '+token,'Prefer':'return=representation'}
+    });
+    if(pr.ok){const rows=await pr.json();currentProfile=rows[0]||null;}
+    // Mettre à jour le label dans le drawer
+    const lbl=document.getElementById('drawer-profil-label');
+    if(lbl&&currentProfile&&(currentProfile.prenom||currentProfile.pseudo)){
+      lbl.textContent=(currentProfile.pseudo?'@'+currentProfile.pseudo:currentProfile.prenom)||'Mon profil';
+    }
+  }catch(e){console.warn('Auth background check:',e);}
+}
+
+// ── Page Profil ──
+const AVATAR_OPTS=['⚽','🦁','🐯','🦊','🐺','🐻','🦅','🐉','🦄','🔥','⚡','🌊','🏔','🎯','💎','👑','🥷','🚀','🛡','⚔','🥊','🏆','🌙','💪','🎪','🌪','🍀','😎','🤙'];
+let editAvatar='⚽';
+
+function renderProfilPage(){
+  const el=document.getElementById('profil-content');
+  if(!currentUser){renderAuthForm(el);}
+  else{renderProfileEdit(el);}
+}
+
+function renderAuthForm(el){
+  el.innerHTML=`
+    <div style="text-align:center;padding:32px 0 20px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:40px;text-transform:uppercase;letter-spacing:-1px;margin-bottom:4px">Squa<span style="color:var(--volt)">dra</span></div>
+      <div style="font-size:14px;color:var(--muted)">Ton identité dans le foot</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:12px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;text-transform:uppercase;margin-bottom:6px;color:var(--text)">Créer mon profil</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5">Entre ton email — tu recevras un lien de connexion. Pas de mot de passe.</div>
+      <label style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Email</label>
+      <input type="email" class="fld" id="auth-email" placeholder="ton@email.com" autocomplete="email" style="margin-bottom:12px">
+      <button class="btn btn-volt" onclick="handleSignIn()" style="margin-bottom:0">Recevoir mon lien ✉️</button>
+      <div id="auth-msg" style="margin-top:10px;font-size:13px;text-align:center;color:var(--muted);min-height:20px"></div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px">Comment ça marche</div>
+      ${[['1','Entre ton email et clique sur le bouton'],['2','Reçois un lien dans ta boîte mail (vérifie les spams)'],['3','Clique sur le lien — tu es connecté automatiquement'],['4','Complète ton profil public']].map(([n,t])=>`
+      <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:var(--volt);min-width:20px">${n}</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.5">${t}</div>
+      </div>`).join('')}
+    </div>`;
+}
+
+async function handleSignIn(){
+  const email=document.getElementById('auth-email').value.trim();
+  const msg=document.getElementById('auth-msg');
+  if(!email||!email.includes('@')){msg.textContent='Email invalide.';msg.style.color='var(--pink)';return;}
+  msg.textContent='Envoi...';msg.style.color='var(--muted)';
+  try{
+    const r=await fetch(SUPA_URL+'/auth/v1/otp',{
+      method:'POST',
+      headers:{...HEADERS,'Content-Type':'application/json'},
+      body:JSON.stringify({email,create_user:true})
+    });
+    if(!r.ok)throw new Error(await r.text());
+    msg.innerHTML='✅ Email envoyé ! Vérifie ta boîte mail (et les spams).';
+    msg.style.color='var(--volt)';
+  }catch(e){msg.textContent='Erreur : '+e.message.slice(0,80);msg.style.color='var(--pink)';}
+}
+
+function renderProfileEdit(el){
+  const p=currentProfile||{};
+  editAvatar=p.avatar||'⚽';
+  el.innerHTML=`
+    <div style="background:var(--hbg);border-radius:20px;padding:24px;margin-bottom:12px;position:relative;overflow:hidden">
+      <div style="font-size:52px;margin-bottom:10px">${editAvatar}</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;text-transform:uppercase;letter-spacing:-0.5px;color:#fff">${esc(p.prenom||'')} ${esc(p.nom||'')}</div>
+      ${p.pseudo?`<div style="font-size:14px;color:rgba(255,255,255,0.5);margin-top:4px">@${esc(p.pseudo)}</div>`:''}
+      ${p.code_postal?`<div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px">📍 ${esc(p.code_postal)}</div>`:''}
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:12px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:14px">Avatar</div>
+      <div style="font-size:44px;text-align:center;margin-bottom:12px" id="avatar-big">${editAvatar}</div>
+      <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px">
+        ${AVATAR_OPTS.map(a=>`<div onclick="pickAvatar('${a}')" style="font-size:24px;text-align:center;padding:6px;border-radius:8px;cursor:pointer;border:2px solid ${a===editAvatar?'var(--volt)':'transparent'};background:${a===editAvatar?'var(--volt-dim)':'transparent'}" id="av-${a}">${a}</div>`).join('')}
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:12px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:14px">Identité</div>
+      ${['prenom:Prénom:text','nom:Nom:text','pseudo:Pseudo:text','code_postal:Code postal:text'].map(f=>{
+        const[k,l,t]=f.split(':');
+        return `<div style="margin-bottom:12px">
+          <label style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">${l}</label>
+          <input type="${t}" class="fld" id="pf-${k}" value="${esc(p[k]||'')}" placeholder="${l}">
+        </div>`;
+      }).join('')}
+      <div style="margin-bottom:0">
+        <label style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Description</label>
+        <textarea class="fld" id="pf-description" rows="3" placeholder="Ton style de jeu..." style="resize:none">${esc(p.description||'')}</textarea>
+      </div>
+    </div>
+
+    <button class="btn btn-volt" onclick="handleSaveProfile()">Enregistrer</button>
+    <button class="btn btn-ghost" onclick="handleSignOut()">Se déconnecter</button>`;
+}
+
+function pickAvatar(emoji){
+  editAvatar=emoji;
+  document.getElementById('avatar-big').textContent=emoji;
+  AVATAR_OPTS.forEach(a=>{
+    const el=document.getElementById('av-'+a);
+    if(!el)return;
+    el.style.border='2px solid '+(a===emoji?'var(--volt)':'transparent');
+    el.style.background=a===emoji?'var(--volt-dim)':'transparent';
+  });
+}
+
+async function handleSaveProfile(){
+  if(!currentUser)return;
+  const token=localStorage.getItem('sq_token');
+  if(!token)return;
+  const data={
+    avatar:editAvatar,
+    prenom:document.getElementById('pf-prenom').value.trim(),
+    nom:document.getElementById('pf-nom').value.trim(),
+    pseudo:document.getElementById('pf-pseudo').value.trim().replace('@',''),
+    code_postal:document.getElementById('pf-code_postal').value.trim(),
+    description:document.getElementById('pf-description').value.trim(),
+    email:currentUser.email,
+    updated_at:new Date().toISOString(),
+  };
+  setSyncDot('loading');
+  try{
+    const r=await fetch(SUPA_URL+'/rest/v1/profiles?id=eq.'+currentUser.id,{
+      method:'PATCH',
+      headers:{...HEADERS,'Authorization':'Bearer '+token,'Prefer':'return=representation'},
+      body:JSON.stringify(data)
+    });
+    if(!r.ok)throw new Error(await r.text());
+    currentProfile={...currentProfile,...data};
+    setSyncDot('ok');
+    showToast('Profil sauvegardé !');
+    const lbl=document.getElementById('drawer-profil-label');
+    if(lbl)lbl.textContent=data.pseudo?'@'+data.pseudo:data.prenom||'Mon profil';
+    renderProfileEdit(document.getElementById('profil-content'));
+  }catch(e){setSyncDot('err');showToast('Erreur : '+e.message.slice(0,50),true);}
+}
+
+async function handleSignOut(){
+  if(!confirm('Se déconnecter ?'))return;
+  const token=localStorage.getItem('sq_token');
+  if(token){
+    await fetch(SUPA_URL+'/auth/v1/logout',{method:'POST',headers:{...HEADERS,'Authorization':'Bearer '+token}}).catch(()=>{});
+    localStorage.removeItem('sq_token');
+  }
+  currentUser=null;currentProfile=null;
+  const lbl=document.getElementById('drawer-profil-label');
+  if(lbl)lbl.textContent='Mon profil';
+  renderProfilPage();
+  showToast('Déconnecté');
 }
 
 // FEUILLE
