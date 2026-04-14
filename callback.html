@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Squadra — Connexion...</title>
+<style>
+  body{
+    margin:0;background:#0D0D0D;color:#F0F0F0;
+    font-family:'Barlow Condensed',sans-serif;
+    display:flex;flex-direction:column;align-items:center;
+    justify-content:center;min-height:100vh;gap:20px;text-align:center;
+  }
+  .logo{font-size:40px;font-weight:900;text-transform:uppercase;letter-spacing:-1px}
+  .logo span{color:#C8FF00}
+  .msg{font-size:14px;letter-spacing:2px;text-transform:uppercase;color:#555;font-weight:700}
+  .spinner{width:28px;height:28px;border:2px solid #222;border-top-color:#C8FF00;border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .err{color:#FF2D78;font-size:13px;padding:0 32px;line-height:1.6;max-width:400px}
+</style>
+</head>
+<body>
+
+<div class="logo">Squa<span>dra</span></div>
+<div class="spinner"></div>
+<div class="msg" id="msg">Connexion en cours...</div>
+<div class="err" id="err"></div>
+
+<script>
+(function(){
+  try {
+    // Supabase envoie le token dans le hash : #access_token=...&refresh_token=...
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+
+    const accessToken  = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+    const type         = params.get('type');
+    const errCode      = params.get('error');
+    const errDesc      = params.get('error_description');
+
+    // Cas erreur
+    if(errCode){
+      document.getElementById('spinner') && (document.querySelector('.spinner').style.display='none');
+      document.getElementById('msg').textContent = 'Erreur de connexion';
+      document.getElementById('err').textContent = decodeURIComponent(errDesc||errCode).replace(/\+/g,' ');
+      return;
+    }
+
+    if(!accessToken){
+      document.getElementById('msg').textContent = 'Lien invalide ou expiré.';
+      document.querySelector('.spinner').style.display='none';
+      setTimeout(()=>{ window.location.href = '/squadra/'; }, 2000);
+      return;
+    }
+
+    // Stocker le token
+    localStorage.setItem('sq_token', accessToken);
+    if(refreshToken) localStorage.setItem('sq_refresh', refreshToken);
+
+    document.getElementById('msg').textContent = 'Connecté ! Redirection...';
+
+    // Rediriger vers l'app principale
+    setTimeout(()=>{
+      window.location.href = '/squadra/';
+    }, 800);
+
+  } catch(e) {
+    document.getElementById('msg').textContent = 'Erreur inattendue.';
+    document.getElementById('err').textContent = e.message;
+    setTimeout(()=>{ window.location.href = '/squadra/'; }, 3000);
+  }
+})();
+</script>
+</body>
+</html>
