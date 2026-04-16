@@ -660,23 +660,48 @@ function renderProfilPage(){
   else{renderProfileEdit(el);}
 }
 
+// Email en cours de vérification OTP
+let otpEmail = '';
+
 function renderAuthForm(el){
   el.innerHTML=`
     <div style="text-align:center;padding:32px 0 20px">
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:40px;text-transform:uppercase;letter-spacing:-1px;margin-bottom:4px">Squa<span style="color:var(--volt)">dra</span></div>
       <div style="font-size:14px;color:var(--muted)">Ton identité dans le foot</div>
     </div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:12px">
+
+    <!-- Étape 1 : email -->
+    <div id="auth-step1" style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:12px">
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;text-transform:uppercase;margin-bottom:6px;color:var(--text)">Créer mon profil</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5">Entre ton email — tu recevras un lien de connexion. Pas de mot de passe.</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5">Entre ton email — tu recevras un code à 6 chiffres. Pas de mot de passe, pas de lien à cliquer.</div>
       <label style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Email</label>
       <input type="email" class="fld" id="auth-email" placeholder="ton@email.com" autocomplete="email" style="margin-bottom:12px">
-      <button class="btn btn-volt" onclick="handleSignIn()" style="margin-bottom:0">Recevoir mon lien ✉️</button>
+      <button class="btn btn-volt" onclick="handleSendOTP()" style="margin-bottom:0">Recevoir mon code 📲</button>
       <div id="auth-msg" style="margin-top:10px;font-size:13px;text-align:center;color:var(--muted);min-height:20px"></div>
     </div>
+
+    <!-- Étape 2 : code OTP (masquée au départ) -->
+    <div id="auth-step2" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:12px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;text-transform:uppercase;margin-bottom:6px;color:var(--text)">Entre ton code</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5" id="otp-subtitle">Code envoyé à ton adresse email.</div>
+      <input type="number" class="fld" id="auth-otp"
+        placeholder="000000"
+        maxlength="6"
+        style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:32px;letter-spacing:8px;margin-bottom:12px"
+        oninput="if(this.value.length>6)this.value=this.value.slice(0,6)">
+      <button class="btn btn-volt" onclick="handleVerifyOTP()" style="margin-bottom:8px">Valider le code ✓</button>
+      <button class="btn btn-ghost" onclick="handleBackToEmail()" style="margin-bottom:0">← Changer d'email</button>
+      <div id="otp-msg" style="margin-top:10px;font-size:13px;text-align:center;color:var(--muted);min-height:20px"></div>
+    </div>
+
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px">
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px">Comment ça marche</div>
-      ${[['1','Entre ton email et clique sur le bouton'],['2','Reçois un lien dans ta boîte mail (vérifie les spams)'],['3','Clique sur le lien — tu es connecté automatiquement'],['4','Complète ton profil public']].map(([n,t])=>`
+      ${[
+        ['1','Entre ton adresse email'],
+        ['2','Reçois un code à 6 chiffres dans ta boîte mail'],
+        ['3','Entre le code dans l\'app — tu es connecté'],
+        ['4','Complète ton profil public']
+      ].map(([n,t])=>`
       <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
         <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:var(--volt);min-width:20px">${n}</div>
         <div style="font-size:13px;color:var(--muted);line-height:1.5">${t}</div>
@@ -684,26 +709,102 @@ function renderAuthForm(el){
     </div>`;
 }
 
-async function handleSignIn(){
-  const email=document.getElementById('auth-email').value.trim();
-  const msg=document.getElementById('auth-msg');
-  if(!email||!email.includes('@')){msg.textContent='Email invalide.';msg.style.color='var(--pink)';return;}
-  msg.textContent='Envoi...';msg.style.color='var(--muted)';
+async function handleSendOTP(){
+  const email = document.getElementById('auth-email').value.trim();
+  const msg   = document.getElementById('auth-msg');
+  if(!email||!email.includes('@')){
+    msg.textContent='Email invalide.';msg.style.color='var(--pink)';return;
+  }
+  msg.textContent='Envoi en cours...';msg.style.color='var(--muted)';
   try{
+    // On envoie un OTP (code 6 chiffres) — pas un magic link
     const r=await fetch(SUPA_URL+'/auth/v1/otp',{
       method:'POST',
       headers:{...HEADERS,'Content-Type':'application/json'},
-      body:JSON.stringify({
-        email,
-        create_user:true,
-        options:{ emailRedirectTo:'https://ng-360.github.io/squadra/' }
-      })
+      body:JSON.stringify({ email, create_user:true })
     });
-    if(!r.ok)throw new Error(await r.text());
-    msg.innerHTML='✅ Email envoyé ! Vérifie ta boîte mail (et les spams).';
-    msg.style.color='var(--volt)';
-  }catch(e){msg.textContent='Erreur : '+e.message.slice(0,80);msg.style.color='var(--pink)';}
+    if(!r.ok){
+      const err=await r.json().catch(()=>({msg:r.statusText}));
+      throw new Error(err.msg||err.message||r.statusText);
+    }
+    // Passer à l'étape 2
+    otpEmail = email;
+    document.getElementById('auth-step1').style.display='none';
+    document.getElementById('auth-step2').style.display='block';
+    document.getElementById('otp-subtitle').textContent='Code envoyé à '+email+'. Vérifie aussi tes spams.';
+    document.getElementById('auth-otp').focus();
+  }catch(e){
+    msg.textContent='Erreur : '+e.message.slice(0,80);
+    msg.style.color='var(--pink)';
+  }
 }
+
+async function handleVerifyOTP(){
+  const code = document.getElementById('auth-otp').value.trim();
+  const msg  = document.getElementById('otp-msg');
+  if(!code||code.length<6){
+    msg.textContent='Entre les 6 chiffres du code.';msg.style.color='var(--pink)';return;
+  }
+  msg.textContent='Vérification...';msg.style.color='var(--muted)';
+  try{
+    const r=await fetch(SUPA_URL+'/auth/v1/verify',{
+      method:'POST',
+      headers:{...HEADERS,'Content-Type':'application/json'},
+      body:JSON.stringify({ email:otpEmail, token:code, type:'email' })
+    });
+    if(!r.ok){
+      const err=await r.json().catch(()=>({msg:r.statusText}));
+      throw new Error(err.msg||err.message||'Code invalide ou expiré.');
+    }
+    const data = await r.json();
+    // Stocker le token
+    if(data.access_token) localStorage.setItem('sq_token', data.access_token);
+    currentUser = data.user;
+    // Charger ou créer le profil
+    await loadOrCreateProfile();
+    // Afficher la page profil
+    showToast('Connecté ! Bienvenue sur Squadra 🎉');
+    renderProfileEdit(document.getElementById('profil-content'));
+  }catch(e){
+    msg.textContent='Erreur : '+e.message.slice(0,80);
+    msg.style.color='var(--pink)';
+  }
+}
+
+function handleBackToEmail(){
+  document.getElementById('auth-step1').style.display='block';
+  document.getElementById('auth-step2').style.display='none';
+  document.getElementById('auth-msg').textContent='';
+}
+
+async function loadOrCreateProfile(){
+  if(!currentUser) return;
+  const token = localStorage.getItem('sq_token');
+  try{
+    const r=await fetch(SUPA_URL+'/rest/v1/profiles?id=eq.'+currentUser.id,{
+      headers:{...HEADERS,'Authorization':'Bearer '+token,'Prefer':'return=representation'}
+    });
+    if(r.ok){
+      const rows=await r.json();
+      currentProfile=rows[0]||null;
+      // Si pas encore de profil, en créer un vide
+      if(!currentProfile){
+        await fetch(SUPA_URL+'/rest/v1/profiles',{
+          method:'POST',
+          headers:{...HEADERS,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},
+          body:JSON.stringify({id:currentUser.id,email:currentUser.email})
+        });
+        currentProfile={id:currentUser.id,email:currentUser.email};
+      }
+    }
+    // Mettre à jour le drawer
+    const lbl=document.getElementById('drawer-profil-label');
+    if(lbl) lbl.textContent=currentProfile?.pseudo?'@'+currentProfile.pseudo
+      :currentProfile?.prenom||'Mon profil';
+  }catch(e){ console.warn('loadOrCreateProfile:', e); }
+}
+
+async function handleSignIn(){ handleSendOTP(); } // alias pour compatibilité
 
 function renderProfileEdit(el){
   const p=currentProfile||{};
