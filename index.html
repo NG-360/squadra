@@ -602,16 +602,22 @@ let currentUser=null, currentProfile=null;
 
 async function checkAuth(){
   try{
-    // Récupérer token depuis magic link dans l'URL
     const hash=window.location.hash;
-    if(hash.includes('access_token')){
+    const comingFromMagicLink = hash.includes('access_token');
+
+    if(comingFromMagicLink){
       const p=new URLSearchParams(hash.replace('#',''));
       const t=p.get('access_token');
-      if(t){localStorage.setItem('sq_token',t);window.location.hash='';}
+      if(t){
+        localStorage.setItem('sq_token',t);
+        // Nettoyer l'URL immédiatement
+        window.history.replaceState(null,'',window.location.pathname);
+      }
     }
+
     const token=localStorage.getItem('sq_token');
-    if(!token)return;
-    // Vérifier le token avec un timeout de 4s
+    if(!token) return;
+
     const ctrl=new AbortController();
     const tim=setTimeout(()=>ctrl.abort(),4000);
     const r=await fetch(SUPA_URL+'/auth/v1/user',{
@@ -621,16 +627,26 @@ async function checkAuth(){
     clearTimeout(tim);
     if(!r.ok){localStorage.removeItem('sq_token');return;}
     currentUser=await r.json();
+
     // Charger le profil
     const pr=await fetch(SUPA_URL+'/rest/v1/profiles?id=eq.'+currentUser.id,{
       headers:{...HEADERS,'Authorization':'Bearer '+token,'Prefer':'return=representation'}
     });
     if(pr.ok){const rows=await pr.json();currentProfile=rows[0]||null;}
-    // Mettre à jour le label dans le drawer
+
+    // Mettre à jour le drawer
     const lbl=document.getElementById('drawer-profil-label');
-    if(lbl&&currentProfile&&(currentProfile.prenom||currentProfile.pseudo)){
-      lbl.textContent=(currentProfile.pseudo?'@'+currentProfile.pseudo:currentProfile.prenom)||'Mon profil';
+    if(lbl){
+      lbl.textContent=currentProfile?.pseudo?'@'+currentProfile.pseudo
+        :currentProfile?.prenom||'Mon profil';
     }
+
+    // Si l'utilisateur arrive du magic link → ouvrir directement la page profil
+    if(comingFromMagicLink){
+      switchPage('profil', document.getElementById('nav-profil'));
+      showToast('Connecté ! Complète ton profil.');
+    }
+
   }catch(e){console.warn('Auth background check:',e);}
 }
 
