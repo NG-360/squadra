@@ -8,7 +8,6 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Squadra">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root{
   --bg:#F5F5F3;--surface:#FFFFFF;--surface2:#EFEFED;--surface3:#E5E5E2;
@@ -501,42 +500,6 @@ const SUPA_URL='https://fxcdxscrqgmhekslxuvz.supabase.co';
 const SUPA_KEY='sb_publishable_QM8b0eBjeUdMA3IF32KZCA_-UgFvxts';
 const HEADERS={'Content-Type':'application/json','apikey':SUPA_KEY};
 const ADMIN_PWD='squadra';
-const REDIRECT_URL='https://ng-360.github.io/squadra/';
-
-// SDK Supabase — gère le magic link automatiquement
-const supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
-
-// ── Auth via SDK ──
-let currentUser=null, currentProfile=null;
-
-async function checkAuth(){
-  try{
-    // Le SDK détecte automatiquement le token dans l'URL (magic link)
-    const { data:{ session } } = await supabase.auth.getSession();
-    if(session){
-      currentUser = session.user;
-      await loadCurrentProfile();
-      updateDrawerProfilLabel();
-    }
-  }catch(e){ console.warn('Auth check:', e); }
-}
-
-async function loadCurrentProfile(){
-  if(!currentUser) return;
-  try{
-    const { data } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single();
-    currentProfile = data;
-  }catch(e){ currentProfile = null; }
-}
-
-function updateDrawerProfilLabel(){
-  const lbl = document.getElementById('drawer-profil-label');
-  if(!lbl) return;
-  if(currentProfile?.pseudo) lbl.textContent = '@'+currentProfile.pseudo;
-  else if(currentProfile?.prenom) lbl.textContent = currentProfile.prenom;
-  else if(currentUser) lbl.textContent = 'Mon profil';
-  else lbl.textContent = 'Mon profil';
-}
 
 async function dbGet(t,p=''){const r=await fetch(SUPA_URL+'/rest/v1/'+t+'?'+p,{headers:{...HEADERS,'Prefer':'return=representation'}});if(!r.ok)throw new Error(await r.text());return r.json();}
 async function dbInsert(t,d){const r=await fetch(SUPA_URL+'/rest/v1/'+t,{method:'POST',headers:{...HEADERS,'Prefer':'return=representation'},body:JSON.stringify(d)});if(!r.ok)throw new Error(await r.text());return r.json();}
@@ -634,6 +597,43 @@ function toggleDark(){
   document.getElementById('dark-label').textContent=dark?'Mode jour':'Mode nuit';
 }
 
+// ── Auth (tourne en arrière-plan, ne bloque jamais l'UI) ──
+let currentUser=null, currentProfile=null;
+
+async function checkAuth(){
+  try{
+    // Récupérer token depuis magic link dans l'URL
+    const hash=window.location.hash;
+    if(hash.includes('access_token')){
+      const p=new URLSearchParams(hash.replace('#',''));
+      const t=p.get('access_token');
+      if(t){localStorage.setItem('sq_token',t);window.location.hash='';}
+    }
+    const token=localStorage.getItem('sq_token');
+    if(!token)return;
+    // Vérifier le token avec un timeout de 4s
+    const ctrl=new AbortController();
+    const tim=setTimeout(()=>ctrl.abort(),4000);
+    const r=await fetch(SUPA_URL+'/auth/v1/user',{
+      headers:{...HEADERS,'Authorization':'Bearer '+token},
+      signal:ctrl.signal
+    });
+    clearTimeout(tim);
+    if(!r.ok){localStorage.removeItem('sq_token');return;}
+    currentUser=await r.json();
+    // Charger le profil
+    const pr=await fetch(SUPA_URL+'/rest/v1/profiles?id=eq.'+currentUser.id,{
+      headers:{...HEADERS,'Authorization':'Bearer '+token,'Prefer':'return=representation'}
+    });
+    if(pr.ok){const rows=await pr.json();currentProfile=rows[0]||null;}
+    // Mettre à jour le label dans le drawer
+    const lbl=document.getElementById('drawer-profil-label');
+    if(lbl&&currentProfile&&(currentProfile.prenom||currentProfile.pseudo)){
+      lbl.textContent=(currentProfile.pseudo?'@'+currentProfile.pseudo:currentProfile.prenom)||'Mon profil';
+    }
+  }catch(e){console.warn('Auth background check:',e);}
+}
+
 // ── Page Profil ──
 const AVATAR_OPTS=['⚽','🦁','🐯','🦊','🐺','🐻','🦅','🐉','🦄','🔥','⚡','🌊','🏔','🎯','💎','👑','🥷','🚀','🛡','⚔','🥊','🏆','🌙','💪','🎪','🌪','🍀','😎','🤙'];
 let editAvatar='⚽';
@@ -669,24 +669,24 @@ function renderAuthForm(el){
 }
 
 async function handleSignIn(){
-  const email = document.getElementById('auth-email').value.trim();
-  const msg = document.getElementById('auth-msg');
-  if(!email || !email.includes('@')){
-    msg.textContent='Email invalide.';msg.style.color='var(--pink)';return;
-  }
+  const email=document.getElementById('auth-email').value.trim();
+  const msg=document.getElementById('auth-msg');
+  if(!email||!email.includes('@')){msg.textContent='Email invalide.';msg.style.color='var(--pink)';return;}
   msg.textContent='Envoi...';msg.style.color='var(--muted)';
   try{
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options:{ emailRedirectTo: REDIRECT_URL }
+    const r=await fetch(SUPA_URL+'/auth/v1/otp',{
+      method:'POST',
+      headers:{...HEADERS,'Content-Type':'application/json'},
+      body:JSON.stringify({
+        email,
+        create_user:true,
+        options:{ emailRedirectTo:'https://ng-360.github.io/squadra/' }
+      })
     });
-    if(error) throw error;
+    if(!r.ok)throw new Error(await r.text());
     msg.innerHTML='✅ Email envoyé ! Vérifie ta boîte mail (et les spams).';
     msg.style.color='var(--volt)';
-  }catch(e){
-    msg.textContent='Erreur : '+e.message.slice(0,80);
-    msg.style.color='var(--pink)';
-  }
+  }catch(e){msg.textContent='Erreur : '+e.message.slice(0,80);msg.style.color='var(--pink)';}
 }
 
 function renderProfileEdit(el){
@@ -739,7 +739,9 @@ function pickAvatar(emoji){
 }
 
 async function handleSaveProfile(){
-  if(!currentUser) return;
+  if(!currentUser)return;
+  const token=localStorage.getItem('sq_token');
+  if(!token)return;
   const data={
     avatar:editAvatar,
     prenom:document.getElementById('pf-prenom').value.trim(),
@@ -752,21 +754,31 @@ async function handleSaveProfile(){
   };
   setSyncDot('loading');
   try{
-    const { error } = await supabase.from('profiles').upsert({id:currentUser.id,...data});
-    if(error) throw error;
+    const r=await fetch(SUPA_URL+'/rest/v1/profiles?id=eq.'+currentUser.id,{
+      method:'PATCH',
+      headers:{...HEADERS,'Authorization':'Bearer '+token,'Prefer':'return=representation'},
+      body:JSON.stringify(data)
+    });
+    if(!r.ok)throw new Error(await r.text());
     currentProfile={...currentProfile,...data};
     setSyncDot('ok');
     showToast('Profil sauvegardé !');
-    updateDrawerProfilLabel();
+    const lbl=document.getElementById('drawer-profil-label');
+    if(lbl)lbl.textContent=data.pseudo?'@'+data.pseudo:data.prenom||'Mon profil';
     renderProfileEdit(document.getElementById('profil-content'));
-  }catch(e){ setSyncDot('err'); showToast('Erreur : '+e.message.slice(0,50), true); }
+  }catch(e){setSyncDot('err');showToast('Erreur : '+e.message.slice(0,50),true);}
 }
 
 async function handleSignOut(){
-  if(!confirm('Se déconnecter ?')) return;
-  await supabase.auth.signOut();
-  currentUser=null; currentProfile=null;
-  updateDrawerProfilLabel();
+  if(!confirm('Se déconnecter ?'))return;
+  const token=localStorage.getItem('sq_token');
+  if(token){
+    await fetch(SUPA_URL+'/auth/v1/logout',{method:'POST',headers:{...HEADERS,'Authorization':'Bearer '+token}}).catch(()=>{});
+    localStorage.removeItem('sq_token');
+  }
+  currentUser=null;currentProfile=null;
+  const lbl=document.getElementById('drawer-profil-label');
+  if(lbl)lbl.textContent='Mon profil';
   renderProfilPage();
   showToast('Déconnecté');
 }
