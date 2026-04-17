@@ -685,10 +685,9 @@ function renderAuthForm(el){
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;text-transform:uppercase;margin-bottom:6px;color:var(--text)">Entre ton code</div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5" id="otp-subtitle">Code envoyé à ton adresse email.</div>
       <input type="number" class="fld" id="auth-otp"
-        placeholder="000000"
-        maxlength="6"
-        style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:32px;letter-spacing:8px;margin-bottom:12px"
-        oninput="if(this.value.length>6)this.value=this.value.slice(0,6)">
+        placeholder="00000000"
+        style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:32px;letter-spacing:6px;margin-bottom:12px"
+        oninput="if(this.value.length>8)this.value=this.value.slice(0,8)">
       <button class="btn btn-volt" onclick="handleVerifyOTP()" style="margin-bottom:8px">Valider le code ✓</button>
       <button class="btn btn-ghost" onclick="handleBackToEmail()" style="margin-bottom:0">← Changer d'email</button>
       <div id="otp-msg" style="margin-top:10px;font-size:13px;text-align:center;color:var(--muted);min-height:20px"></div>
@@ -743,7 +742,7 @@ async function handleVerifyOTP(){
   const code = document.getElementById('auth-otp').value.trim();
   const msg  = document.getElementById('otp-msg');
   if(!code||code.length<6){
-    msg.textContent='Entre les 6 chiffres du code.';msg.style.color='var(--pink)';return;
+    msg.textContent='Entre le code reçu par email (6 ou 8 chiffres).';msg.style.color='var(--pink)';return;
   }
   msg.textContent='Vérification...';msg.style.color='var(--muted)';
   try{
