@@ -510,9 +510,20 @@ async function loadOrCreateProfile(){
 async function loadGroups(){
   if(!currentUser)return;
   try{
-    // Récupérer les groupes dont je suis membre
-    const members=await dbGet('group_members','user_id=eq.'+currentUser.id+'&select=group_id,role,groups(*)');
-    GROUPS=members.map(m=>({...m.groups, myRole:m.role}));
+    // Étape 1 : mes memberships
+    const memberships=await dbGet('group_members','user_id=eq.'+currentUser.id+'&select=group_id,role');
+    if(!memberships.length){ GROUPS=[]; updateDrawerGroup(); return; }
+
+    // Étape 2 : charger les groupes correspondants
+    const groupIds=memberships.map(m=>m.group_id);
+    const groups=await dbGet('groups','id=in.('+groupIds.join(',')+')');
+
+    // Fusionner avec le rôle
+    GROUPS=groups.map(g=>{
+      const m=memberships.find(mb=>mb.group_id===g.id);
+      return {...g, myRole:m?.role||'member'};
+    });
+
     // Restaurer le groupe actif depuis localStorage
     const savedId=localStorage.getItem('sq_active_group');
     if(savedId && GROUPS.find(g=>g.id===savedId)){
@@ -528,18 +539,31 @@ async function loadGroups(){
 async function loadGroupData(){
   if(!activeGroup)return;
   try{
-    // Membres du groupe avec leurs profils
-    const members=await dbGet('group_members','group_id=eq.'+activeGroup.id+'&select=user_id,role,profiles(id,prenom,nom,pseudo,avatar,description,code_postal)');
-    MEMBERS=members.map(m=>({
-      ...m.profiles,
-      role:m.role,
-      n: m.profiles?.pseudo||(m.profiles?.prenom+' '+m.profiles?.nom).trim()||'Joueur',
-      e: m.profiles?.avatar||'⚽',
-      a: m.profiles?.pseudo||'',
-      atk:3, def:3, phy:3
-    })).filter(m=>m.id);
+    // Étape 1 : membres du groupe
+    const memberships=await dbGet('group_members','group_id=eq.'+activeGroup.id+'&select=user_id,role');
+    const userIds=memberships.map(m=>m.user_id);
+
+    // Étape 2 : profils des membres
+    let profiles=[];
+    if(userIds.length){
+      profiles=await dbGet('profiles','id=in.('+userIds.join(',')+')');
+    }
+
+    // Fusionner
+    MEMBERS=memberships.map(m=>{
+      const p=profiles.find(pr=>pr.id===m.user_id)||{};
+      const name=(p.pseudo||(((p.prenom||'')+' '+(p.nom||'')).trim()))||'Joueur';
+      return {
+        id:m.user_id, role:m.role,
+        n:name, e:p.avatar||'⚽', a:p.pseudo||'',
+        atk:3, def:3, phy:3,
+        ...p
+      };
+    });
+
     // Matchs du groupe
     MATCHES=await dbGet('matches','group_id=eq.'+activeGroup.id+'&order=date.desc');
+
     // Feuille du groupe
     const feuilleRows=await dbGet('feuille','group_id=eq.'+activeGroup.id);
     if(feuilleRows.length){
