@@ -695,27 +695,76 @@ async function handleCreateGroup(){
   const desc=document.getElementById('new-group-desc').value.trim();
   const msg=document.getElementById('create-msg');
   if(!name){msg.textContent='Nom requis.';msg.style.color='var(--pink)';return;}
+  if(!currentUser){msg.textContent='Connecte-toi d\'abord.';msg.style.color='var(--pink)';return;}
   msg.textContent='Création...';msg.style.color='var(--muted)';
   try{
-    const group=await rpc('create_group',{p_name:name,p_description:desc,p_avatar:selectedGroupAvatar});
+    // Générer un code d'invitation côté client
+    const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const rand=()=>chars[Math.floor(Math.random()*chars.length)];
+    const code=[rand(),rand(),rand(),rand(),'-',rand(),rand(),rand(),rand()].join('');
+
+    // 1. Créer le groupe directement
+    const token=localStorage.getItem('sq_token');
+    const gRes=await fetch(SUPA_URL+'/rest/v1/groups',{
+      method:'POST',
+      headers:{...HEADERS,'Authorization':'Bearer '+token,'Prefer':'return=representation','Content-Type':'application/json'},
+      body:JSON.stringify({name,description:desc,avatar:selectedGroupAvatar,invite_code:code,created_by:currentUser.id})
+    });
+    if(!gRes.ok){const e=await gRes.text();throw new Error(e);}
+    const [group]=await gRes.json();
+
+    // 2. Se nommer admin
+    const mRes=await fetch(SUPA_URL+'/rest/v1/group_members',{
+      method:'POST',
+      headers:{...HEADERS,'Authorization':'Bearer '+token,'Prefer':'return=minimal','Content-Type':'application/json'},
+      body:JSON.stringify({group_id:group.id,user_id:currentUser.id,role:'admin'})
+    });
+    if(!mRes.ok){const e=await mRes.text();throw new Error(e);}
+
     group.myRole='admin';
     GROUPS.push(group);
-    await setActiveGroup(group);
     showToast('Squadra créée ! 🎉');
-  }catch(e){msg.textContent='Erreur : '+e.message.slice(0,60);msg.style.color='var(--pink)';}
+    await setActiveGroup(group);
+  }catch(e){
+    msg.textContent='Erreur : '+e.message.slice(0,80);
+    msg.style.color='var(--pink)';
+    console.error('createGroup:',e);
+  }
 }
 
 async function handleJoinGroup(){
   const code=document.getElementById('join-code').value.trim().toUpperCase();
   const msg=document.getElementById('join-msg');
   if(!code||code.length<8){msg.textContent='Code invalide.';msg.style.color='var(--pink)';return;}
+  if(!currentUser){msg.textContent='Connecte-toi d\'abord.';msg.style.color='var(--pink)';return;}
   msg.textContent='Recherche...';msg.style.color='var(--muted)';
   try{
-    const groupName=await rpc('join_group',{p_code:code});
-    showToast('Bienvenue dans '+groupName+' !');
+    const token=localStorage.getItem('sq_token');
+    // Trouver le groupe via le code
+    const gRes=await fetch(SUPA_URL+'/rest/v1/groups?invite_code=eq.'+encodeURIComponent(code),{
+      headers:{...HEADERS,'Authorization':'Bearer '+token,'Prefer':'return=representation'}
+    });
+    if(!gRes.ok) throw new Error(await gRes.text());
+    const groups=await gRes.json();
+    if(!groups.length) throw new Error('Code d\'invitation invalide.');
+    const group=groups[0];
+
+    // Rejoindre le groupe
+    const mRes=await fetch(SUPA_URL+'/rest/v1/group_members',{
+      method:'POST',
+      headers:{...HEADERS,'Authorization':'Bearer '+token,'Prefer':'resolution=ignore-duplicates,return=minimal','Content-Type':'application/json'},
+      body:JSON.stringify({group_id:group.id,user_id:currentUser.id,role:'member'})
+    });
+    if(!mRes.ok) throw new Error(await mRes.text());
+
+    showToast('Bienvenue dans '+group.name+' !');
     await loadGroups();
     renderGroupesPage();
-  }catch(e){msg.textContent='Erreur : '+e.message.slice(0,60);msg.style.color='var(--pink)';}
+  }catch(e){
+    msg.textContent='Erreur : '+e.message.slice(0,60);
+    msg.style.color='var(--pink)';
+    console.error('joinGroup:',e);
+  }
 }
 
 function copyInviteCode(code){
