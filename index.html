@@ -510,21 +510,48 @@ async function loadOrCreateProfile(){
 async function loadGroups(){
   if(!currentUser)return;
   try{
-    // Étape 1 : mes memberships
-    const memberships=await dbGet('group_members','user_id=eq.'+currentUser.id+'&select=group_id,role');
+    const token=localStorage.getItem('sq_token');
+
+    // Lecture directe de group_members avec le token explicite
+    const mRes=await fetch(
+      SUPA_URL+'/rest/v1/group_members?user_id=eq.'+currentUser.id+'&select=group_id,role',
+      {headers:{...HEADERS,'Authorization':'Bearer '+token,'Prefer':'return=representation'}}
+    );
+
+    if(!mRes.ok){
+      const errText=await mRes.text();
+      console.error('group_members error:',mRes.status, errText);
+      showToast('Erreur chargement groupes: '+mRes.status,true);
+      return;
+    }
+
+    const memberships=await mRes.json();
+    console.log('Memberships found:',memberships);
+
     if(!memberships.length){ GROUPS=[]; updateDrawerGroup(); return; }
 
-    // Étape 2 : charger les groupes correspondants
+    // Charger les groupes correspondants
     const groupIds=memberships.map(m=>m.group_id);
-    const groups=await dbGet('groups','id=in.('+groupIds.join(',')+')');
+    const gRes=await fetch(
+      SUPA_URL+'/rest/v1/groups?id=in.('+groupIds.join(',')+')',
+      {headers:{...HEADERS,'Authorization':'Bearer '+token,'Prefer':'return=representation'}}
+    );
 
-    // Fusionner avec le rôle
+    if(!gRes.ok){
+      const errText=await gRes.text();
+      console.error('groups error:',gRes.status,errText);
+      return;
+    }
+
+    const groups=await gRes.json();
+    console.log('Groups found:',groups);
+
     GROUPS=groups.map(g=>{
       const m=memberships.find(mb=>mb.group_id===g.id);
       return {...g, myRole:m?.role||'member'};
     });
 
-    // Restaurer le groupe actif depuis localStorage
+    // Restaurer le groupe actif
     const savedId=localStorage.getItem('sq_active_group');
     if(savedId && GROUPS.find(g=>g.id===savedId)){
       activeGroup=GROUPS.find(g=>g.id===savedId);
@@ -533,7 +560,10 @@ async function loadGroups(){
     }
     if(activeGroup) await loadGroupData();
     updateDrawerGroup();
-  }catch(e){console.warn('loadGroups:',e);}
+  }catch(e){
+    console.error('loadGroups exception:',e);
+    showToast('Erreur: '+e.message.slice(0,50),true);
+  }
 }
 
 async function loadGroupData(){
