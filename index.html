@@ -623,13 +623,24 @@ async function setActiveGroup(group){
 function renderGroupesPage(){
   const el=document.getElementById('groupes-content');
   if(!currentUser){
-    el.innerHTML=`<div style="text-align:center;padding:40px 16px"><div style="font-size:40px;margin-bottom:16px">🏟</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;text-transform:uppercase;margin-bottom:8px">Mes Squadras</div><div style="font-size:14px;color:var(--muted);margin-bottom:24px">Connecte-toi pour créer ou rejoindre une Squadra.</div><button class="btn btn-volt" onclick="switchPage('profil',null)">Se connecter</button></div>`;
+    el.innerHTML=`<div style="text-align:center;padding:40px 16px">
+      <div style="font-size:40px;margin-bottom:16px">🏟</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;text-transform:uppercase;margin-bottom:8px">Mes Squadras</div>
+      <div style="font-size:14px;color:var(--muted);margin-bottom:24px">Connecte-toi pour créer ou rejoindre une Squadra.</div>
+      <button class="btn btn-volt" onclick="switchPage('profil',null)">Se connecter</button>
+    </div>`;
     return;
   }
-  let html=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-top:8px"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;text-transform:uppercase">Mes Squadras</div></div>`;
 
+  let html=`<div style="padding-top:8px">`;
+
+  // ── Liste des groupes ──
   if(GROUPS.length===0){
-    html+=`<div style="text-align:center;padding:32px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px"><div style="font-size:40px;margin-bottom:12px">🏟</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;text-transform:uppercase;margin-bottom:6px">Aucune Squadra</div><div style="font-size:13px;color:var(--muted)">Crée ta première Squadra ou rejoins-en une via un code d'invitation.</div></div>`;
+    html+=`<div style="text-align:center;padding:32px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px">
+      <div style="font-size:40px;margin-bottom:12px">🏟</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;text-transform:uppercase;margin-bottom:6px">Aucune Squadra</div>
+      <div style="font-size:13px;color:var(--muted)">Crée ta première Squadra ou rejoins-en une via un code d'invitation.</div>
+    </div>`;
   } else {
     GROUPS.forEach(g=>{
       const isActive=activeGroup?.id===g.id;
@@ -637,37 +648,74 @@ function renderGroupesPage(){
         <div class="group-ava">${g.avatar||'⚽'}</div>
         <div class="group-info">
           <div class="group-name">${esc(g.name)}</div>
-          <div class="group-meta">${isActive?'● Squadra active':'Appuyer pour activer'}</div>
+          <div class="group-meta">${isActive?'● Active':'Appuyer pour activer'}</div>
         </div>
         <div class="group-role ${g.myRole==='admin'?'role-admin':'role-member'}">${g.myRole==='admin'?'Admin':'Membre'}</div>
       </div>`;
     });
-    // Si groupe actif, afficher infos
-    if(activeGroup){
-      html+=`<div class="sep"></div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px;text-transform:uppercase;margin-bottom:12px">${esc(activeGroup.name)}</div>`;
-      // Code d'invitation
-      if(activeGroup.myRole==='admin'){
-        html+=`<div style="margin-bottom:14px">
-          <div class="section-title" style="margin-top:0">Code d'invitation</div>
-          <div class="group-code" onclick="copyInviteCode('${esc(activeGroup.invite_code)}')" title="Appuyer pour copier">${esc(activeGroup.invite_code)}</div>
-          <div style="font-size:12px;color:var(--muted);text-align:center">Appuie sur le code pour le copier</div>
-        </div>`;
-      }
-      // Membres
-      html+=`<div class="section-title" style="margin-top:0">Membres (${MEMBERS.length})</div><div class="card" style="padding:8px 14px">`;
-      MEMBERS.forEach(m=>{
-        html+=`<div class="member-row">
-          <div class="member-ava">${m.e||'⚽'}</div>
-          <div class="member-name">${esc(m.n)}</div>
+  }
+
+  // ── Détail du groupe actif ──
+  if(activeGroup){
+    const isAdmin=activeGroup.myRole==='admin';
+    html+=`<div class="sep"></div>`;
+
+    // En-tête groupe avec avatar + nom
+    html+=`<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+      <div style="font-size:36px">${activeGroup.avatar||'⚽'}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;text-transform:uppercase">${esc(activeGroup.name)}</div>
+        ${activeGroup.description?`<div style="font-size:12px;color:var(--muted);margin-top:2px">${esc(activeGroup.description)}</div>`:''}
+      </div>
+    </div>`;
+
+    // Code d'invitation (tout le monde peut le voir pour inviter)
+    html+=`<div style="margin-bottom:14px">
+      <div class="section-title" style="margin-top:0">Code d'invitation</div>
+      <div class="group-code" onclick="copyInviteCode('${esc(activeGroup.invite_code)}')">${esc(activeGroup.invite_code)}</div>
+      <div style="font-size:12px;color:var(--muted);text-align:center">Appuie pour copier · Partage ce code pour inviter</div>
+    </div>`;
+
+    // Membres
+    html+=`<div class="section-title" style="margin-top:0">Membres (${MEMBERS.length})</div>
+    <div class="card" style="padding:8px 14px;margin-bottom:14px">`;
+    MEMBERS.forEach(m=>{
+      const isMe=m.id===currentUser?.id;
+      html+=`<div class="member-row">
+        <div class="member-ava">${m.e||'⚽'}</div>
+        <div class="member-name">${esc(m.n)}${isMe?' <span style="font-size:10px;color:var(--muted)">(moi)</span>':''}</div>
+        <div style="display:flex;align-items:center;gap:6px">
           <div class="member-role">${m.role==='admin'?'Admin':'Membre'}</div>
-        </div>`;
-      });
-      html+=`</div>`;
+          ${isAdmin&&!isMe?`<button onclick="kickMember('${m.id.replace(/'/g,"\\'")}','${String(m.n).replace(/'/g,"\\'")}')" style="background:none;border:none;cursor:pointer;font-size:16px;padding:2px;color:var(--muted)" title="Retirer du groupe">✕</button>`:''}
+        </div>
+      </div>`;
+    });
+    html+=`</div>`;
+
+    // Admin : renommer/modifier le groupe
+    if(isAdmin){
+      html+=`<div class="section-title">Paramètres admin</div>
+      <div class="card" style="margin-bottom:14px">
+        <div style="margin-bottom:10px">
+          <label class="field-label">Nom du groupe</label>
+          <input type="text" class="fld" id="edit-group-name" value="${esc(activeGroup.name)}" style="margin-bottom:8px">
+          <label class="field-label">Description</label>
+          <input type="text" class="fld" id="edit-group-desc" value="${esc(activeGroup.description||'')}" style="margin-bottom:12px">
+          <button class="btn btn-volt" onclick="saveGroupSettings()" style="margin-bottom:0">Enregistrer les modifications</button>
+        </div>
+      </div>`;
+    }
+
+    // Se désinscrire (pas admin) ou dissoudre (admin)
+    html+=`<div class="sep"></div>`;
+    if(isAdmin){
+      html+=`<button class="btn btn-pink" onclick="dissolveGroup()">Dissoudre cette Squadra</button>`;
+    } else {
+      html+=`<button class="btn btn-ghost" onclick="leaveGroup()" style="border-color:var(--pink);color:var(--pink)">Quitter cette Squadra</button>`;
     }
   }
 
-  // Actions
+  // Actions globales
   html+=`<div class="sep"></div>
   <button class="btn btn-volt" onclick="showCreateGroup()">Créer une Squadra</button>
   <button class="btn btn-ghost" onclick="showJoinGroup()">Rejoindre via un code</button>`;
@@ -676,7 +724,7 @@ function renderGroupesPage(){
   html+=`<div id="form-create" style="display:none;margin-top:12px">
     <div class="card">
       <div class="card-title" style="margin-bottom:14px">Nouvelle Squadra</div>
-      <label class="field-label">Nom de la Squadra</label>
+      <label class="field-label">Nom</label>
       <input type="text" class="fld" id="new-group-name" placeholder="Ex: Les Mercredis FC" style="margin-bottom:10px">
       <label class="field-label">Description (optionnel)</label>
       <input type="text" class="fld" id="new-group-desc" placeholder="Futsal du mercredi soir..." style="margin-bottom:10px">
@@ -694,7 +742,7 @@ function renderGroupesPage(){
   html+=`<div id="form-join" style="display:none;margin-top:12px">
     <div class="card">
       <div class="card-title" style="margin-bottom:6px">Rejoindre une Squadra</div>
-      <div class="card-sub" style="margin-bottom:14px">Entre le code d'invitation partagé par l'admin du groupe.</div>
+      <div class="card-sub" style="margin-bottom:14px">Entre le code d'invitation partagé par l'admin.</div>
       <label class="field-label">Code d'invitation</label>
       <input type="text" class="fld" id="join-code" placeholder="XXXX-XXXX" style="text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;letter-spacing:4px;text-align:center;margin-bottom:12px" maxlength="9">
       <button class="btn btn-volt" onclick="handleJoinGroup()" style="margin-bottom:8px">Rejoindre</button>
@@ -703,10 +751,97 @@ function renderGroupesPage(){
     </div>
   </div>`;
 
+  html+=`</div>`;
   el.innerHTML=html;
-  // Init avatar picker
   selectedGroupAvatar='⚽';
-  document.getElementById('ga-⚽').style.borderColor='var(--volt)';
+  const ga=document.getElementById('ga-⚽');
+  if(ga) ga.style.borderColor='var(--volt)';
+}
+
+// ── Admin : sauvegarder nom/description ──
+async function saveGroupSettings(){
+  const name=document.getElementById('edit-group-name')?.value.trim();
+  const desc=document.getElementById('edit-group-desc')?.value.trim();
+  if(!name){showToast('Nom requis',true);return;}
+  const token=localStorage.getItem('sq_token');
+  setSyncDot('loading');
+  try{
+    const r=await fetch(SUPA_URL+'/rest/v1/groups?id=eq.'+activeGroup.id,{
+      method:'PATCH',
+      headers:{...HEADERS,'Authorization':'Bearer '+token,'Content-Type':'application/json','Prefer':'return=representation'},
+      body:JSON.stringify({name,description:desc})
+    });
+    if(!r.ok) throw new Error(await r.text());
+    activeGroup.name=name; activeGroup.description=desc;
+    const g=GROUPS.find(g=>g.id===activeGroup.id);
+    if(g){g.name=name;g.description=desc;}
+    setSyncDot('ok');
+    showToast('Groupe mis à jour !');
+    updateDrawerGroup();
+    renderGroupesPage();
+  }catch(e){setSyncDot('err');showToast('Erreur: '+e.message.slice(0,40),true);}
+}
+
+// ── Admin : virer un membre ──
+async function kickMember(userId,userName){
+  if(!confirm('Retirer '+userName+' de la Squadra ?')) return;
+  const token=localStorage.getItem('sq_token');
+  setSyncDot('loading');
+  try{
+    const r=await fetch(SUPA_URL+'/rest/v1/group_members?group_id=eq.'+activeGroup.id+'&user_id=eq.'+userId,{
+      method:'DELETE',
+      headers:{...HEADERS,'Authorization':'Bearer '+token}
+    });
+    if(!r.ok) throw new Error(await r.text());
+    MEMBERS=MEMBERS.filter(m=>m.id!==userId);
+    setSyncDot('ok');
+    showToast(userName+' retiré de la Squadra');
+    renderGroupesPage();
+  }catch(e){setSyncDot('err');showToast('Erreur',true);}
+}
+
+// ── Quitter une Squadra ──
+async function leaveGroup(){
+  if(!confirm('Quitter '+activeGroup.name+' ?')) return;
+  const token=localStorage.getItem('sq_token');
+  setSyncDot('loading');
+  try{
+    const r=await fetch(SUPA_URL+'/rest/v1/group_members?group_id=eq.'+activeGroup.id+'&user_id=eq.'+currentUser.id,{
+      method:'DELETE',
+      headers:{...HEADERS,'Authorization':'Bearer '+token}
+    });
+    if(!r.ok) throw new Error(await r.text());
+    GROUPS=GROUPS.filter(g=>g.id!==activeGroup.id);
+    activeGroup=GROUPS[0]||null;
+    localStorage.setItem('sq_active_group', activeGroup?.id||'');
+    if(activeGroup) await loadGroupData();
+    setSyncDot('ok');
+    showToast('Tu as quitté la Squadra');
+    updateDrawerGroup();
+    renderGroupesPage();
+  }catch(e){setSyncDot('err');showToast('Erreur',true);}
+}
+
+// ── Admin : dissoudre le groupe ──
+async function dissolveGroup(){
+  if(!confirm('Dissoudre '+activeGroup.name+' ? Cette action est irréversible.')) return;
+  const token=localStorage.getItem('sq_token');
+  setSyncDot('loading');
+  try{
+    const r=await fetch(SUPA_URL+'/rest/v1/groups?id=eq.'+activeGroup.id,{
+      method:'DELETE',
+      headers:{...HEADERS,'Authorization':'Bearer '+token}
+    });
+    if(!r.ok) throw new Error(await r.text());
+    GROUPS=GROUPS.filter(g=>g.id!==activeGroup.id);
+    activeGroup=GROUPS[0]||null;
+    localStorage.setItem('sq_active_group', activeGroup?.id||'');
+    if(activeGroup) await loadGroupData();
+    setSyncDot('ok');
+    showToast('Squadra dissoute');
+    updateDrawerGroup();
+    renderGroupesPage();
+  }catch(e){setSyncDot('err');showToast('Erreur',true);}
 }
 
 let selectedGroupAvatar='⚽';
@@ -801,6 +936,18 @@ function copyInviteCode(code){
   navigator.clipboard.writeText(code).then(()=>showToast('Code copié : '+code));
 }
 
+async function switchFmGroup(groupId){
+  const g=GROUPS.find(x=>x.id===groupId);
+  if(!g||g.id===activeGroup?.id) return;
+  setSyncDot('loading');
+  activeGroup=g;
+  localStorage.setItem('sq_active_group',g.id);
+  await loadGroupData();
+  setSyncDot('ok');
+  updateDrawerGroup();
+  renderFeuille();
+}
+
 // ═══ FEUILLE ═══
 async function initFeuille(){
   const el=document.getElementById('fm-body');
@@ -830,7 +977,19 @@ function renderFeuille(){
   const present=allPool.filter(p=>ps.has(p.n));
   const absent=allPool.filter(p=>!ps.has(p.n));
   const n=present.length;
-  let html=`<div class="fm-header">
+
+  // ── Sélecteur de Squadra en haut ──
+  let html='';
+  if(GROUPS.length>1){
+    html+=`<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;scrollbar-width:none">`;
+    GROUPS.forEach(g=>{
+      const isActive=activeGroup?.id===g.id;
+      html+=`<button onclick="switchFmGroup('${g.id}')" style="flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid ${isActive?'var(--volt)':'var(--border)'};background:${isActive?'var(--volt-dim)':'var(--surface)'};font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:${isActive?'var(--volt)':'var(--muted)'};cursor:pointer;white-space:nowrap">${g.avatar||'⚽'} ${esc(g.name)}</button>`;
+    });
+    html+=`</div>`;
+  }
+
+  html+=`<div class="fm-header">
     <div class="fm-time-row">
       <span class="fm-time-label">Heure</span>
       <input type="time" class="fm-time-input" value="${esc(FM.heure)}" onchange="FM.heure=this.value;fmSave()">
@@ -992,29 +1151,113 @@ async function renderStats(){
 // ═══ DASHBOARD ═══
 function renderDashboard(){
   const el=document.getElementById('dashboard-content');
-  if(!activeGroup){el.innerHTML=`<div style="padding-top:8px"><div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;text-align:center;margin-bottom:12px"><div style="font-size:40px;margin-bottom:12px">🏟</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;text-transform:uppercase;margin-bottom:8px">Bienvenue sur Squadra</div><div style="font-size:13px;color:var(--muted);margin-bottom:20px">Crée ou rejoins une Squadra pour commencer.</div><button class="btn btn-volt" onclick="switchPage('groupes','nav-groupes')">Mes Squadras</button></div></div>`;return;}
+  if(!currentUser){
+    el.innerHTML=`<div style="padding-top:8px;text-align:center;padding:40px 16px">
+      <div style="font-size:40px;margin-bottom:12px">👋</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;text-transform:uppercase;margin-bottom:8px">Bienvenue</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px">Connecte-toi pour accéder à tes Squadras.</div>
+      <button class="btn btn-volt" onclick="switchPage('profil',null)">Se connecter</button>
+    </div>`;
+    return;
+  }
+
+  if(!GROUPS.length){
+    el.innerHTML=`<div style="padding-top:8px;text-align:center;padding:40px 16px">
+      <div style="font-size:40px;margin-bottom:12px">🏟</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;text-transform:uppercase;margin-bottom:8px">Pas encore de Squadra</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px">Crée ou rejoins une Squadra pour commencer.</div>
+      <button class="btn btn-volt" onclick="switchPage('groupes','nav-groupes')">Mes Squadras</button>
+    </div>`;
+    return;
+  }
+
   computeStats();
+  let html=`<div style="padding-top:8px">`;
+
+  // ── Feuilles ouvertes dans tes Squadras ──
+  html+=`<div class="section-title" style="margin-top:0">Feuilles de match ouvertes</div>`;
+
+  // Pour chaque groupe, on affiche un aperçu rapide de la feuille
+  // activeGroup d'abord, puis les autres
+  const orderedGroups=[...GROUPS].sort((a,b)=>a.id===activeGroup?.id?-1:1);
+
+  orderedGroups.forEach(g=>{
+    const isActive=g.id===activeGroup?.id;
+    // Pour le groupe actif on a FM, pour les autres on affiche juste le nom
+    if(isActive&&FM.date){
+      const presCount=FM.presents.length;
+      const cap=g.capacite||10;
+      const pct=Math.min(100,Math.round(presCount/cap*100));
+      const d=FM.date?new Date(FM.date).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}):'';
+      html+=`<div class="card" style="margin-bottom:10px;cursor:pointer" onclick="switchPage('feuille','nav-feuille')">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="font-size:24px">${g.avatar||'⚽'}</div>
+          <div style="flex:1">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:15px;text-transform:uppercase">${esc(g.name)}</div>
+            <div style="font-size:12px;color:var(--muted)">${d}${FM.lieu?' · '+esc(FM.lieu):''} · ${FM.heure||'20h30'}</div>
+          </div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:var(--volt)">${presCount}/${cap}</div>
+        </div>
+        <div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:var(--volt);border-radius:3px;transition:width .4s"></div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px">${cap-presCount>0?cap-presCount+' place'+(cap-presCount>1?'s':'')+' disponible'+(cap-presCount>1?'s':''):'Complet !'}</div>
+      </div>`;
+    } else {
+      html+=`<div class="card" style="margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:10px" onclick="switchFmGroup('${g.id}');switchPage('feuille','nav-feuille')">
+        <div style="font-size:24px">${g.avatar||'⚽'}</div>
+        <div style="flex:1">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:15px;text-transform:uppercase">${esc(g.name)}</div>
+          <div style="font-size:12px;color:var(--muted)">Appuyer pour ouvrir la feuille</div>
+        </div>
+        <div style="color:var(--muted);font-size:18px">›</div>
+      </div>`;
+    }
+  });
+
+  // ── Dernier match ──
   const last=MATCHES[0];
-  const members_count=MEMBERS.length;
-  let html=`<div style="padding-top:8px">
-  <button class="btn btn-volt" onclick="switchPage('feuille','nav-feuille')">📝 Feuille de match</button>
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--volt);margin-bottom:4px">${esc(activeGroup.avatar||'⚽')} Squadra active</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;text-transform:uppercase">${esc(activeGroup.name)}</div>
-    <div style="font-size:12px;color:var(--muted);margin-top:4px">${members_count} membre${members_count>1?'s':''} · ${MATCHES.length} match${MATCHES.length>1?'s':''}</div>
-  </div>`;
   if(last){
     const w=last.score_a>last.score_b?'A':last.score_a<last.score_b?'B':'Nul';
     const d=new Date(last.date).toLocaleDateString('fr-FR',{day:'numeric',month:'long'});
-    html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Dernier match · ${d}</div>
+    html+=`<div class="section-title">Dernier match${activeGroup?' — '+esc(activeGroup.name):''}</div>
+    <div class="card" style="margin-bottom:10px">
+      <div style="font-size:11px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">${d}${last.lieu?' · '+esc(last.lieu):''}</div>
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <div><div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--volt)">Éq. A${w==='A'?' ✓':''}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${(last.team_a||[]).join(', ')}</div></div>
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--volt)">Éq. A${w==='A'?' ✓':''}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">${(last.team_a||[]).join(', ')}</div>
+        </div>
         <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;color:var(--text);padding:0 12px">${last.score_a}–${last.score_b}</div>
-        <div style="text-align:right"><div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--pink)">Éq. B${w==='B'?' ✓':''}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${(last.team_b||[]).join(', ')}</div></div>
+        <div style="text-align:right">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--pink)">Éq. B${w==='B'?' ✓':''}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">${(last.team_b||[]).join(', ')}</div>
+        </div>
       </div>
     </div>`;
   }
+
+  // ── Stats personnelles ──
+  const myName=currentProfile?.pseudo||(currentProfile?.prenom+' '+currentProfile?.nom||'').trim();
+  if(myName&&_stats[myName]){
+    const s=_stats[myName];
+    html+=`<div class="section-title">Mes stats personnelles</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">
+      <div class="card" style="text-align:center;padding:12px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--volt)">${s.w}</div>
+        <div style="font-size:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Victoires</div>
+      </div>
+      <div class="card" style="text-align:center;padding:12px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900">${s.g}</div>
+        <div style="font-size:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Matchs</div>
+      </div>
+      <div class="card" style="text-align:center;padding:12px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--volt)">${s.g?Math.round(s.w/s.g*100):0}%</div>
+        <div style="font-size:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Win rate</div>
+      </div>
+    </div>`;
+  }
+
   html+=`</div>`;
   el.innerHTML=html;
 }
