@@ -438,8 +438,7 @@ function switchPage(page,btn){
   if(page==='groupes') renderGroupesPage();
   if(page==='profil') renderProfilPage();
   if(page==='dashboard') renderDashboard();
-  if(page==='feuille') initFeuille();
-  if(page==='resultats') renderResultats();
+  if(page==='feuille') initFeuille();  if(page==='resultats') renderResultats();
   if(page==='stats') renderStats();
 }
 
@@ -594,16 +593,17 @@ async function loadGroupData(){
     // Matchs du groupe
     MATCHES=await dbGet('matches','group_id=eq.'+activeGroup.id+'&order=date.desc');
 
-    // Feuille du groupe
-    const feuilleRows=await dbGet('feuille','group_id=eq.'+activeGroup.id);
+    // Feuille du groupe — uniquement si ouverte
+    const feuilleRows=await dbGet('feuille','group_id=eq.'+activeGroup.id+'&is_open=eq.true');
     if(feuilleRows.length){
       const f=feuilleRows[0];
       FM.presents=f.presents||[]; FM.invites=f.invites||[];
       FM.team_a=f.team_a||[]; FM.team_b=f.team_b||[];
       FM.date=f.date||new Date().toISOString().split('T')[0];
       FM.heure=f.heure||'20:30'; FM.lieu=f.lieu||'';
+      FM.is_open=true;
     } else {
-      FM={presents:[],invites:[],team_a:[],team_b:[],date:new Date().toISOString().split('T')[0],heure:'20:30',lieu:''};
+      FM={presents:[],invites:[],team_a:[],team_b:[],date:'',heure:'20:30',lieu:'',is_open:false};
     }
   }catch(e){console.warn('loadGroupData:',e);}
 }
@@ -952,26 +952,59 @@ async function switchFmGroup(groupId){
 async function initFeuille(){
   const el=document.getElementById('fm-body');
   if(!currentUser){
-    el.innerHTML=`<div style="text-align:center;padding:40px 16px"><div style="font-size:40px;margin-bottom:16px">🔒</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;text-transform:uppercase;margin-bottom:8px">Connexion requise</div><div style="font-size:14px;color:var(--muted);margin-bottom:24px">Connecte-toi pour accéder à la feuille de match.</div><button class="btn btn-volt" onclick="switchPage('profil',null)">Se connecter</button></div>`;
+    el.innerHTML=`<div style="text-align:center;padding:40px 16px">
+      <div style="font-size:40px;margin-bottom:16px">🔒</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;text-transform:uppercase;margin-bottom:8px">Connexion requise</div>
+      <div style="font-size:14px;color:var(--muted);margin-bottom:24px">Connecte-toi pour accéder à la feuille de match.</div>
+      <button class="btn btn-volt" onclick="switchPage('profil',null)">Se connecter</button>
+    </div>`;
     return;
   }
   if(!activeGroup){
-    el.innerHTML=`<div style="text-align:center;padding:40px 16px"><div style="font-size:40px;margin-bottom:16px">🏟</div><div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;text-transform:uppercase;margin-bottom:8px">Choisis ta Squadra</div><div style="font-size:14px;color:var(--muted);margin-bottom:24px">Sélectionne ou crée une Squadra pour accéder à la feuille de match.</div><button class="btn btn-volt" onclick="switchPage('groupes','nav-groupes')">Mes Squadras</button></div>`;
+    el.innerHTML=`<div style="text-align:center;padding:40px 16px">
+      <div style="font-size:40px;margin-bottom:16px">🏟</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;text-transform:uppercase;margin-bottom:8px">Choisis ta Squadra</div>
+      <div style="font-size:14px;color:var(--muted);margin-bottom:24px">Sélectionne ou crée une Squadra pour accéder à la feuille de match.</div>
+      <button class="btn btn-volt" onclick="switchPage('groupes','nav-groupes')">Mes Squadras</button>
+    </div>`;
     return;
   }
   renderFeuille();
 }
 
+async function openFeuille(){
+  FM={presents:[],invites:[],team_a:[],team_b:[],
+    date:new Date().toISOString().split('T')[0],
+    heure:'20:30',lieu:'',is_open:true};
+  await fmSave();
+  renderFeuille();
+  showToast('Feuille ouverte !');
+}
+
 async function fmSave(){
-  if(!activeGroup)return;
+  if(!activeGroup||!FM.is_open)return;
   setSyncDot('loading');
   try{
-    await fetch(SUPA_URL+'/rest/v1/feuille',{method:'POST',headers:{...authH(),'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({group_id:activeGroup.id,date:FM.date,heure:FM.heure,lieu:FM.lieu,presents:FM.presents,invites:FM.invites,team_a:FM.team_a,team_b:FM.team_b,updated_at:new Date().toISOString()})});
+    await fetch(SUPA_URL+'/rest/v1/feuille',{method:'POST',headers:{...authH(),'Prefer':'resolution=merge-duplicates,return=minimal'},
+      body:JSON.stringify({group_id:activeGroup.id,is_open:true,date:FM.date,heure:FM.heure,lieu:FM.lieu,presents:FM.presents,invites:FM.invites,team_a:FM.team_a,team_b:FM.team_b,updated_at:new Date().toISOString()})});
     setSyncDot('ok');
   }catch(e){setSyncDot('err');showToast('Erreur sauvegarde',true);}
 }
 
 function renderFeuille(){
+  // ── Feuille fermée ──
+  if(!FM.is_open){
+    const squadraSelector=GROUPS.length>1?`<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:16px;scrollbar-width:none">${GROUPS.map(g=>{const isActive=activeGroup?.id===g.id;return`<button onclick="switchFmGroup('${g.id}')" style="flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid ${isActive?'var(--volt)':'var(--border)'};background:${isActive?'var(--volt-dim)':'var(--surface)'};font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:${isActive?'var(--volt)':'var(--muted)'};cursor:pointer;white-space:nowrap">${g.avatar||'⚽'} ${esc(g.name)}</button>`;}).join('')}</div>`:'';
+    document.getElementById('fm-body').innerHTML=`
+      ${squadraSelector}
+      <div style="text-align:center;padding:40px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)">
+        <div style="font-size:40px;margin-bottom:12px">📋</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;text-transform:uppercase;margin-bottom:6px">${esc(activeGroup?.name||'')}</div>
+        <div style="font-size:14px;color:var(--muted);margin-bottom:24px">Aucune feuille de match ouverte</div>
+        <button class="btn btn-volt" onclick="openFeuille()" style="max-width:280px;margin:0 auto">Ouvrir une feuille de match</button>
+      </div>`;
+    return;
+  }
   const allPool=[...MEMBERS,...FM.invites];
   const ps=new Set(FM.presents);
   const present=allPool.filter(p=>ps.has(p.n));
@@ -1070,24 +1103,86 @@ async function fmGenerateTeams(){const allPool=[...MEMBERS,...FM.invites];const 
 function fmCopyTeamsWA(){const txt=`⚽ ÉQUIPES — ${FM.heure||'20h30'}${FM.lieu?' @ '+FM.lieu:''}\n\n🟢 Équipe A\n${FM.team_a.map(n=>'• '+n).join('\n')}\n\n🔴 Équipe B\n${FM.team_b.map(n=>'• '+n).join('\n')}`;navigator.clipboard.writeText(txt).then(()=>showToast('Copié !'));}
 function copyFmWA(){const allPool=[...MEMBERS,...FM.invites];const ps=new Set(FM.presents);const pres=allPool.filter(p=>ps.has(p.n)).map(p=>p.n);const abs=allPool.filter(p=>!ps.has(p.n)).map(p=>p.n);let txt=`📋 FEUILLE — ${FM.heure||'20h30'}${FM.lieu?' @ '+FM.lieu:''}\n\n`;if(pres.length)txt+=`✅ Présents (${pres.length})\n${pres.map(n=>'• '+n).join('\n')}\n\n`;if(abs.length)txt+=`❌ Absents\n${abs.map(n=>'• '+n).join('\n')}`;navigator.clipboard.writeText(txt).then(()=>showToast('Feuille copiée !'));}
 async function saveFmMatch(){if(!activeGroup)return;const sA=parseInt(document.getElementById('fm-score-a').value)||0;const sB=parseInt(document.getElementById('fm-score-b').value)||0;if(!FM.team_a.length||!FM.team_b.length){showToast('Génère les équipes d\'abord',true);return;}setSyncDot('loading');try{await dbInsert('matches',{id:Date.now(),group_id:activeGroup.id,date:FM.date||new Date().toISOString().split('T')[0],heure:FM.heure,lieu:FM.lieu,team_a:FM.team_a,team_b:FM.team_b,score_a:sA,score_b:sB,created_by:currentUser?.id});MATCHES=await dbGet('matches','group_id=eq.'+activeGroup.id+'&order=date.desc');setSyncDot('ok');document.getElementById('fm-score-modal').style.display='none';showToast('Match enregistré !');}catch(e){setSyncDot('err');showToast('Erreur',true);}}
-async function resetFeuille(){if(!confirm('Nouvelle feuille ?'))return;FM={presents:[],invites:[],team_a:[],team_b:[],date:new Date().toISOString().split('T')[0],heure:'20:30',lieu:''};await fmSave();renderFeuille();}
+async function resetFeuille(){
+  if(!confirm('Fermer cette feuille de match ?'))return;
+  const token=localStorage.getItem('sq_token');
+  setSyncDot('loading');
+  try{
+    await fetch(SUPA_URL+'/rest/v1/feuille?group_id=eq.'+activeGroup.id,{
+      method:'PATCH',
+      headers:{...authH(),'Content-Type':'application/json'},
+      body:JSON.stringify({is_open:false})
+    });
+    FM.is_open=false;
+    setSyncDot('ok');
+    renderFeuille();
+    showToast('Feuille fermée');
+  }catch(e){setSyncDot('err');showToast('Erreur',true);}
+}
 
+async function saveFmMatch(){
+  if(!activeGroup)return;
+  const sA=parseInt(document.getElementById('fm-score-a').value)||0;
+  const sB=parseInt(document.getElementById('fm-score-b').value)||0;
+  if(!FM.team_a.length||!FM.team_b.length){showToast('Génère les équipes d\'abord',true);return;}
+  setSyncDot('loading');
+  try{
+    await dbInsert('matches',{id:Date.now(),group_id:activeGroup.id,date:FM.date||new Date().toISOString().split('T')[0],heure:FM.heure,lieu:FM.lieu,team_a:FM.team_a,team_b:FM.team_b,score_a:sA,score_b:sB,created_by:currentUser?.id});
+    // Fermer la feuille après enregistrement du score
+    await fetch(SUPA_URL+'/rest/v1/feuille?group_id=eq.'+activeGroup.id,{
+      method:'PATCH',
+      headers:{...authH(),'Content-Type':'application/json'},
+      body:JSON.stringify({is_open:false})
+    });
+    FM.is_open=false;
+    MATCHES=await dbGet('matches','group_id=eq.'+activeGroup.id+'&order=date.desc');
+    setSyncDot('ok');
+    document.getElementById('fm-score-modal').style.display='none';
+    showToast('Match enregistré !');
+    renderFeuille();
+  }catch(e){setSyncDot('err');showToast('Erreur',true);}
+}
 // ═══ RÉSULTATS ═══
+let resultatsMode='global';
+
 async function renderResultats(){
   const el=document.getElementById('resultats-content');
-  if(!activeGroup){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)">Sélectionne une Squadra d\'abord.</div>';return;}
+  if(!currentUser){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)">Connecte-toi d\'abord.</div>';return;}
+
+  const togBtnStyle=(active)=>`flex:1;padding:8px;border-radius:8px;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;background:${active?'var(--surface)':'transparent'};color:${active?'var(--text)':'var(--muted)'};box-shadow:${active?'0 1px 3px rgba(0,0,0,0.1)':'none'}`;
+
+  let html=`<div style="padding-top:12px">
+  <div style="display:flex;background:var(--surface2);border-radius:10px;padding:3px;margin-bottom:14px">
+    <button onclick="setResultatsMode('global')" style="${togBtnStyle(resultatsMode==='global')}">Toutes Squadras</button>
+    <button onclick="setResultatsMode('squadra')" style="${togBtnStyle(resultatsMode==='squadra')}">Cette Squadra</button>
+  </div>`;
+
   setSyncDot('loading');
-  try{MATCHES=await dbGet('matches','group_id=eq.'+activeGroup.id+'&order=date.desc');setSyncDot('ok');}catch(e){setSyncDot('err');}
-  let html=`<div style="padding-top:8px">
-  <div class="section-title" style="margin-top:0">Historique des matchs</div>`;
-  if(!MATCHES.length){html+='<div style="text-align:center;padding:24px;color:var(--muted);font-family:\'Barlow Condensed\',sans-serif;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:1px">Aucun match enregistré</div>';}
-  else{
-    html+=MATCHES.map(m=>{
+  let matches=[];
+  try{
+    if(resultatsMode==='global'&&GROUPS.length){
+      const gids=GROUPS.map(g=>g.id);
+      matches=await dbGet('matches','group_id=in.('+gids.join(',')+')'+'&order=date.desc');
+    } else if(activeGroup){
+      matches=await dbGet('matches','group_id=eq.'+activeGroup.id+'&order=date.desc');
+    }
+    setSyncDot('ok');
+  }catch(e){setSyncDot('err');}
+
+  html+=`<div class="section-title" style="margin-top:0">Historique — ${matches.length} match${matches.length>1?'s':''}</div>`;
+  if(!matches.length){
+    html+=`<div style="text-align:center;padding:24px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:1px">Aucun match enregistré</div>`;
+  } else {
+    html+=matches.map(m=>{
       const w=m.score_a>m.score_b?'A':m.score_a<m.score_b?'B':'Nul';
       const d=new Date(m.date).toLocaleDateString('fr-FR',{day:'numeric',month:'long'});
       const col=w==='A'?'var(--volt)':w==='B'?'var(--pink)':'var(--muted)';
+      const g=GROUPS.find(gr=>gr.id===m.group_id);
       return `<div class="match-entry">
-        <div class="match-date">${d}${m.lieu?' · '+esc(m.lieu):''}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <div class="match-date" style="text-align:left;margin-bottom:0">${d}${m.lieu?' · '+esc(m.lieu):''}</div>
+          ${resultatsMode==='global'&&g?`<div style="font-size:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:0.5px">${g.avatar||'⚽'} ${esc(g.name)}</div>`:''}
+        </div>
         <div class="match-score" style="color:${col}">${m.score_a} — ${m.score_b}</div>
         <div class="match-teams">
           <div><div class="match-team-name mt-a">Éq. A${w==='A'?' ✓':''}</div><div class="match-players">${(m.team_a||[]).join(', ')}</div></div>
@@ -1101,58 +1196,109 @@ async function renderResultats(){
   html+=`</div>`;
   el.innerHTML=html;
 }
-async function deleteMatch(id){if(!confirm('Supprimer ?'))return;setSyncDot('loading');try{await dbDelete('matches','id=eq.'+id);MATCHES=MATCHES.filter(m=>m.id!==id);setSyncDot('ok');renderResultats();}catch(e){setSyncDot('err');}}
+async function setResultatsMode(mode){resultatsMode=mode;await renderResultats();}
+async function deleteMatch(id){if(!confirm('Supprimer ?'))return;setSyncDot('loading');try{await dbDelete('matches','id=eq.'+id);setSyncDot('ok');renderResultats();}catch(e){setSyncDot('err');}}
 
 // ═══ STATS ═══
-function computeStats(){
-  _stats={};
-  MEMBERS.forEach(p=>{_stats[p.n]={w:0,d:0,l:0,g:0};});
-  MATCHES.forEach(m=>{
+let statsMode='global'; // 'global' | 'squadra'
+
+function computeStats(matches){
+  const s={};
+  matches.forEach(m=>{
     const tA=m.team_a||[];const tB=m.team_b||[];
     const w=m.score_a>m.score_b?'A':m.score_a<m.score_b?'B':'D';
     [...tA,...tB].forEach(n=>{
-      if(!_stats[n])_stats[n]={w:0,d:0,l:0,g:0};
-      _stats[n].g++;
+      if(!s[n])s[n]={w:0,d:0,l:0,g:0};
+      s[n].g++;
       const inA=tA.includes(n);
-      if(w==='D')_stats[n].d++;
-      else if((w==='A'&&inA)||(w==='B'&&!inA))_stats[n].w++;
-      else _stats[n].l++;
+      if(w==='D')s[n].d++;
+      else if((w==='A'&&inA)||(w==='B'&&!inA))s[n].w++;
+      else s[n].l++;
     });
   });
+  return s;
 }
+
 async function renderStats(){
   const el=document.getElementById('stats-content');
-  if(!activeGroup){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)">Sélectionne une Squadra d\'abord.</div>';return;}
-  if(!MATCHES.length){MATCHES=await dbGet('matches','group_id=eq.'+activeGroup.id+'&order=date.desc').catch(()=>[]);}
-  computeStats();
-  const players=MEMBERS.filter(p=>_stats[p.n]&&_stats[p.n].g>0).sort((a,b)=>_stats[b.n].w-_stats[a.n].w);
-  let html=`<div style="padding-top:8px"><div class="section-title" style="margin-top:0">Classement — ${esc(activeGroup.name)}</div>`;
-  if(!players.length){html+='<div style="text-align:center;padding:24px;color:var(--muted);font-family:\'Barlow Condensed\',sans-serif;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:1px">Pas encore de matchs</div>';}
-  else{
-    html+=players.map(p=>{
-      const s=_stats[p.n];
+  if(!currentUser){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)">Connecte-toi d\'abord.</div>';return;}
+
+  // Toggle UI
+  let html=`<div style="padding-top:12px">
+  <div style="display:flex;background:var(--surface2);border-radius:10px;padding:3px;margin-bottom:14px">
+    <button onclick="setStatsMode('global')" id="stats-btn-global" style="flex:1;padding:8px;border-radius:8px;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;background:${statsMode==='global'?'var(--surface)':'transparent'};color:${statsMode==='global'?'var(--text)':'var(--muted)'};box-shadow:${statsMode==='global'?'0 1px 3px rgba(0,0,0,0.1)':'none'}">Toutes Squadras</button>
+    <button onclick="setStatsMode('squadra')" id="stats-btn-squadra" style="flex:1;padding:8px;border-radius:8px;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;background:${statsMode==='squadra'?'var(--surface)':'transparent'};color:${statsMode==='squadra'?'var(--text)':'var(--muted)'};box-shadow:${statsMode==='squadra'?'0 1px 3px rgba(0,0,0,0.1)':'none'}">Cette Squadra</button>
+  </div>`;
+
+  setSyncDot('loading');
+  let matches=[];
+  try{
+    if(statsMode==='global'&&GROUPS.length){
+      const gids=GROUPS.map(g=>g.id);
+      matches=await dbGet('matches','group_id=in.('+gids.join(',')+')'+'&order=date.desc');
+    } else if(statsMode==='squadra'&&activeGroup){
+      matches=await dbGet('matches','group_id=eq.'+activeGroup.id+'&order=date.desc');
+    }
+    setSyncDot('ok');
+  }catch(e){setSyncDot('err');}
+
+  const stats=computeStats(matches);
+  const context=statsMode==='squadra'&&activeGroup?esc(activeGroup.name):'toutes Squadras';
+
+  html+=`<div class="section-title" style="margin-top:0">Classement — ${context}</div>`;
+
+  // Collecter tous les joueurs connus
+  let players=[];
+  if(statsMode==='squadra'){
+    players=MEMBERS.filter(m=>stats[m.n]&&stats[m.n].g>0).sort((a,b)=>stats[b.n].w-stats[a.n].w);
+  } else {
+    // Mode global : on prend tous les noms des matchs
+    players=Object.keys(stats).filter(n=>stats[n].g>0)
+      .sort((a,b)=>stats[b].w-stats[a].w)
+      .map(n=>{
+        const m=MEMBERS.find(mb=>mb.n===n);
+        return {n,e:m?.e||'⚽'};
+      });
+  }
+
+  if(!players.length){
+    html+=`<div style="text-align:center;padding:24px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:1px">Pas encore de matchs</div>`;
+  } else {
+    html+=players.map((p,i)=>{
+      const s=stats[p.n];
+      const medals=['🥇','🥈','🥉'];
       return `<div class="stat-card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">${p.e||'⚽'}</span><div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;text-transform:uppercase">${esc(p.n)}</div></div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px">${s.g} match${s.g>1?'s':''} · ${Math.round(s.w/s.g*100)}%</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:16px">${medals[i]||''}</span>
+            <span style="font-size:18px">${p.e||'⚽'}</span>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;text-transform:uppercase">${esc(p.n)}</div>
+          </div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px">${s.g} match${s.g>1?'s':''}</div>
         </div>
         <div class="stat-bars">
           <div class="stat-col"><div class="stat-val stat-w">${s.w}</div><div class="stat-lbl">Victoires</div></div>
           <div class="stat-col"><div class="stat-val stat-d">${s.d}</div><div class="stat-lbl">Nuls</div></div>
-          <div class="stat-col"><div class="stat-val stat-l">${s.l}</div><div class="stat-lbl">Défaites</div></div>
+          <div class="stat-col"><div class="stat-val" style="color:var(--volt)">${Math.round(s.w/s.g*100)}%</div><div class="stat-lbl">Win rate</div></div>
         </div>
       </div>`;
     }).join('');
   }
+
   html+=`</div>`;
   el.innerHTML=html;
 }
 
+async function setStatsMode(mode){
+  statsMode=mode;
+  await renderStats();
+}
+
 // ═══ DASHBOARD ═══
-function renderDashboard(){
+async function renderDashboard(){
   const el=document.getElementById('dashboard-content');
   if(!currentUser){
-    el.innerHTML=`<div style="padding-top:8px;text-align:center;padding:40px 16px">
+    el.innerHTML=`<div style="padding-top:12px;text-align:center;padding:40px 16px">
       <div style="font-size:40px;margin-bottom:12px">👋</div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;text-transform:uppercase;margin-bottom:8px">Bienvenue</div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:20px">Connecte-toi pour accéder à tes Squadras.</div>
@@ -1160,9 +1306,8 @@ function renderDashboard(){
     </div>`;
     return;
   }
-
   if(!GROUPS.length){
-    el.innerHTML=`<div style="padding-top:8px;text-align:center;padding:40px 16px">
+    el.innerHTML=`<div style="padding-top:12px;text-align:center;padding:40px 16px">
       <div style="font-size:40px;margin-bottom:12px">🏟</div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;text-transform:uppercase;margin-bottom:8px">Pas encore de Squadra</div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:20px">Crée ou rejoins une Squadra pour commencer.</div>
@@ -1171,91 +1316,100 @@ function renderDashboard(){
     return;
   }
 
-  computeStats();
-  let html=`<div style="padding-top:8px">`;
+  el.innerHTML=`<div style="padding-top:12px;text-align:center;padding:40px;color:var(--muted)">Chargement...</div>`;
+  setSyncDot('loading');
 
-  // ── Feuilles ouvertes dans tes Squadras ──
-  html+=`<div class="section-title" style="margin-top:0">Feuilles de match ouvertes</div>`;
+  // Charger toutes les feuilles ouvertes de toutes mes Squadras
+  let openSheets=[];
+  try{
+    const groupIds=GROUPS.map(g=>g.id);
+    const sheets=await dbGet('feuille','group_id=in.('+groupIds.join(',')+')'+'&is_open=eq.true');
+    openSheets=sheets.map(s=>({...s, group:GROUPS.find(g=>g.id===s.group_id)})).filter(s=>s.group);
+  }catch(e){console.warn('dashboard sheets:',e);}
 
-  // Pour chaque groupe, on affiche un aperçu rapide de la feuille
-  // activeGroup d'abord, puis les autres
-  const orderedGroups=[...GROUPS].sort((a,b)=>a.id===activeGroup?.id?-1:1);
+  // Charger tous les matchs de toutes mes Squadras pour les stats perso
+  let allMatches=[];
+  try{
+    const groupIds=GROUPS.map(g=>g.id);
+    allMatches=await dbGet('matches','group_id=in.('+groupIds.join(',')+')'+'&order=date.desc&limit=50');
+  }catch(e){console.warn('dashboard matches:',e);}
 
-  orderedGroups.forEach(g=>{
-    const isActive=g.id===activeGroup?.id;
-    // Pour le groupe actif on a FM, pour les autres on affiche juste le nom
-    if(isActive&&FM.date){
-      const presCount=FM.presents.length;
-      const cap=g.capacite||10;
-      const pct=Math.min(100,Math.round(presCount/cap*100));
-      const d=FM.date?new Date(FM.date).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}):'';
-      html+=`<div class="card" style="margin-bottom:10px;cursor:pointer" onclick="switchPage('feuille','nav-feuille')">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <div style="font-size:24px">${g.avatar||'⚽'}</div>
-          <div style="flex:1">
-            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:15px;text-transform:uppercase">${esc(g.name)}</div>
-            <div style="font-size:12px;color:var(--muted)">${d}${FM.lieu?' · '+esc(FM.lieu):''} · ${FM.heure||'20h30'}</div>
-          </div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:var(--volt)">${presCount}/${cap}</div>
-        </div>
-        <div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden">
-          <div style="height:100%;width:${pct}%;background:var(--volt);border-radius:3px;transition:width .4s"></div>
-        </div>
-        <div style="font-size:11px;color:var(--muted);margin-top:6px">${cap-presCount>0?cap-presCount+' place'+(cap-presCount>1?'s':'')+' disponible'+(cap-presCount>1?'s':''):'Complet !'}</div>
-      </div>`;
-    } else {
-      html+=`<div class="card" style="margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:10px" onclick="switchFmGroup('${g.id}');switchPage('feuille','nav-feuille')">
-        <div style="font-size:24px">${g.avatar||'⚽'}</div>
-        <div style="flex:1">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:15px;text-transform:uppercase">${esc(g.name)}</div>
-          <div style="font-size:12px;color:var(--muted)">Appuyer pour ouvrir la feuille</div>
-        </div>
-        <div style="color:var(--muted);font-size:18px">›</div>
-      </div>`;
-    }
-  });
+  setSyncDot('ok');
 
-  // ── Dernier match ──
-  const last=MATCHES[0];
-  if(last){
-    const w=last.score_a>last.score_b?'A':last.score_a<last.score_b?'B':'Nul';
-    const d=new Date(last.date).toLocaleDateString('fr-FR',{day:'numeric',month:'long'});
-    html+=`<div class="section-title">Dernier match${activeGroup?' — '+esc(activeGroup.name):''}</div>
-    <div class="card" style="margin-bottom:10px">
-      <div style="font-size:11px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">${d}${last.lieu?' · '+esc(last.lieu):''}</div>
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--volt)">Éq. A${w==='A'?' ✓':''}</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:2px">${(last.team_a||[]).join(', ')}</div>
-        </div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;color:var(--text);padding:0 12px">${last.score_a}–${last.score_b}</div>
-        <div style="text-align:right">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--pink)">Éq. B${w==='B'?' ✓':''}</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:2px">${(last.team_b||[]).join(', ')}</div>
-        </div>
-      </div>
-    </div>`;
+  // Calculer stats personnelles toutes Squadras confondues
+  const myName=currentProfile?.pseudo||((currentProfile?.prenom||'')+' '+(currentProfile?.nom||'')).trim();
+  let myStats={w:0,d:0,l:0,g:0};
+  if(myName){
+    allMatches.forEach(m=>{
+      const tA=m.team_a||[];const tB=m.team_b||[];
+      if(![...tA,...tB].includes(myName))return;
+      const w=m.score_a>m.score_b?'A':m.score_a<m.score_b?'B':'D';
+      const inA=tA.includes(myName);
+      myStats.g++;
+      if(w==='D')myStats.d++;
+      else if((w==='A'&&inA)||(w==='B'&&!inA))myStats.w++;
+      else myStats.l++;
+    });
   }
 
-  // ── Stats personnelles ──
-  const myName=currentProfile?.pseudo||(currentProfile?.prenom+' '+currentProfile?.nom||'').trim();
-  if(myName&&_stats[myName]){
-    const s=_stats[myName];
-    html+=`<div class="section-title">Mes stats personnelles</div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">
-      <div class="card" style="text-align:center;padding:12px">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--volt)">${s.w}</div>
-        <div style="font-size:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Victoires</div>
-      </div>
-      <div class="card" style="text-align:center;padding:12px">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900">${s.g}</div>
-        <div style="font-size:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Matchs</div>
-      </div>
-      <div class="card" style="text-align:center;padding:12px">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--volt)">${s.g?Math.round(s.w/s.g*100):0}%</div>
-        <div style="font-size:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Win rate</div>
-      </div>
+  let html=`<div style="padding-top:12px">`;
+
+  // ── Feuilles ouvertes ──
+  html+=`<div class="section-title" style="margin-top:0">Feuilles de match ouvertes</div>`;
+
+  if(!openSheets.length){
+    html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;text-align:center;margin-bottom:14px">
+      <div style="font-size:28px;margin-bottom:8px">📋</div>
+      <div style="font-size:13px;color:var(--muted)">Aucune feuille de match ouverte dans tes Squadras</div>
     </div>`;
+  } else {
+    openSheets.forEach(s=>{
+      const g=s.group;
+      const presCount=(s.presents||[]).length;
+      const cap=g.capacite||10;
+      const pct=Math.min(100,Math.round(presCount/cap*100));
+      const d=s.date?new Date(s.date).toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'}):'';
+      html+=`<div class="card" style="margin-bottom:10px;cursor:pointer" onclick="switchFmGroup('${g.id}');switchPage('feuille','nav-feuille')">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="font-size:24px">${g.avatar||'⚽'}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:15px;text-transform:uppercase">${esc(g.name)}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">${d}${s.heure?' · '+s.heure:''}${s.lieu?' · '+esc(s.lieu):''}</div>
+          </div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;color:${presCount>=cap?'var(--pink)':'var(--volt)'}">${presCount}/${cap}</div>
+        </div>
+        <div style="height:5px;background:var(--surface2);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${presCount>=cap?'var(--pink)':'var(--volt)'};border-radius:3px"></div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:5px">${presCount>=cap?'Complet !':cap-presCount+' place'+(cap-presCount>1?'s':'')+' disponible'+(cap-presCount>1?'s':'')}</div>
+      </div>`;
+    });
+  }
+
+  // ── Stats perso ──
+  html+=`<div class="section-title">Mes statistiques</div>`;
+  if(!myStats.g){
+    html+=`<div style="font-size:13px;color:var(--muted);text-align:center;padding:12px">Pas encore de matchs enregistrés.</div>`;
+  } else {
+    html+=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:4px">
+      <div class="card" style="text-align:center;padding:12px 6px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:var(--volt)">${myStats.w}</div>
+        <div style="font-size:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Vic.</div>
+      </div>
+      <div class="card" style="text-align:center;padding:12px 6px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:var(--muted)">${myStats.d}</div>
+        <div style="font-size:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Nul</div>
+      </div>
+      <div class="card" style="text-align:center;padding:12px 6px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:var(--pink)">${myStats.l}</div>
+        <div style="font-size:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Déf.</div>
+      </div>
+      <div class="card" style="text-align:center;padding:12px 6px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:var(--volt)">${Math.round(myStats.w/myStats.g*100)}%</div>
+        <div style="font-size:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Win</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:14px">${myStats.g} match${myStats.g>1?'s':''} · toutes Squadras confondues</div>`;
   }
 
   html+=`</div>`;
@@ -1412,6 +1566,12 @@ function renderProfileEdit(el, isNew=false){
   <div class="auth-card" style="margin-bottom:12px">
     <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Identité</div>
     ${['prenom:Prénom','nom:Nom','pseudo:Pseudo','code_postal:Code postal'].map(f=>{const[k,l]=f.split(':');return`<div style="margin-bottom:10px"><label class="field-label">${l}</label><input type="text" class="fld" id="pf-${k}" value="${esc(p[k]||'')}" placeholder="${l}"></div>`;}).join('')}
+    <div style="margin-bottom:10px">
+      <label class="field-label">Niveau de jeu</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px" id="niv-picker">
+        ${[['debutant','🌱 Débutant'],['intermediaire','⚡ Intermédiaire'],['confirme','🔥 Confirmé'],['avance','💎 Avancé'],['expert','👑 Expert']].map(([v,l])=>`<button type="button" onclick="pickNiveau('${v}')" id="niv-${v}" style="padding:6px 12px;border-radius:20px;border:1px solid ${(p.niveau||'')===v?'var(--volt)':'var(--border)'};background:${(p.niveau||'')===v?'var(--volt-dim)':'transparent'};font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:${(p.niveau||'')===v?'var(--volt)':'var(--muted)'};cursor:pointer">${l}</button>`).join('')}
+      </div>
+    </div>
     <label class="field-label">Description</label>
     <textarea class="fld" id="pf-description" rows="3" placeholder="Ton style de jeu..." style="resize:none">${esc(p.description||'')}</textarea>
   </div>
@@ -1426,6 +1586,19 @@ function renderProfileEdit(el, isNew=false){
 
   <button class="btn btn-volt" onclick="handleSaveProfile()">Enregistrer le profil</button>
   <button class="btn btn-ghost" onclick="handleSignOut()">Se déconnecter</button>`;
+}
+
+let selectedNiveau='';
+function pickNiveau(v){
+  selectedNiveau=v;
+  ['debutant','intermediaire','confirme','avance','expert'].forEach(n=>{
+    const el=document.getElementById('niv-'+n);
+    if(!el)return;
+    const active=n===v;
+    el.style.borderColor=active?'var(--volt)':'var(--border)';
+    el.style.background=active?'var(--volt-dim)':'transparent';
+    el.style.color=active?'var(--volt)':'var(--muted)';
+  });
 }
 
 function pickAvatar(e){editAvatar=e;document.getElementById('avatar-big').textContent=e;document.getElementById('hero-ava').textContent=e;AVATAR_OPTS.forEach(a=>{const el=document.getElementById('av-'+a);if(el){el.classList.toggle('selected',a===e);}});}
@@ -1449,7 +1622,7 @@ async function handleSetPassword(){
 async function handleSaveProfile(){
   if(!currentUser)return;
   const token=localStorage.getItem('sq_token');
-  const data={avatar:editAvatar,prenom:document.getElementById('pf-prenom').value.trim(),nom:document.getElementById('pf-nom').value.trim(),pseudo:document.getElementById('pf-pseudo').value.trim().replace('@',''),code_postal:document.getElementById('pf-code_postal').value.trim(),description:document.getElementById('pf-description').value.trim(),email:currentUser.email,updated_at:new Date().toISOString()};
+  const data={avatar:editAvatar,prenom:document.getElementById('pf-prenom').value.trim(),nom:document.getElementById('pf-nom').value.trim(),pseudo:document.getElementById('pf-pseudo').value.trim().replace('@',''),code_postal:document.getElementById('pf-code_postal').value.trim(),description:document.getElementById('pf-description').value.trim(),niveau:selectedNiveau||currentProfile?.niveau||'',email:currentUser.email,updated_at:new Date().toISOString()};
   setSyncDot('loading');
   try{
     const r=await fetch(SUPA_URL+'/rest/v1/profiles?id=eq.'+currentUser.id,{method:'PATCH',headers:{...HEADERS,'Authorization':'Bearer '+token,'Prefer':'return=representation'},body:JSON.stringify(data)});
