@@ -946,7 +946,7 @@ async function switchFmGroup(groupId){
   await loadGroupData();
   setSyncDot('ok');
   updateDrawerGroup();
-  renderFeuille();
+  await initFeuille();
 }
 
 // ═══ FEUILLE ═══
@@ -970,6 +970,20 @@ async function initFeuille(){
     </div>`;
     return;
   }
+  // Toujours recharger la feuille depuis Supabase avant de rendre
+  try{
+    const rows=await dbGet('feuille','group_id=eq.'+activeGroup.id);
+    const active=rows.find(f=>f.is_open===true);
+    if(active){
+      FM.presents=active.presents||[]; FM.invites=active.invites||[];
+      FM.team_a=active.team_a||[]; FM.team_b=active.team_b||[];
+      FM.date=active.date||new Date().toISOString().split('T')[0];
+      FM.heure=active.heure||'20:30'; FM.lieu=active.lieu||'';
+      FM.is_open=true;
+    } else {
+      FM={presents:[],invites:[],team_a:[],team_b:[],date:'',heure:'20:30',lieu:'',is_open:false};
+    }
+  }catch(e){console.warn('initFeuille reload:',e);}
   renderFeuille();
 }
 
