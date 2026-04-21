@@ -988,22 +988,59 @@ async function initFeuille(){
 }
 
 async function openFeuille(){
+  const token=localStorage.getItem('sq_token');
   FM={presents:[],invites:[],team_a:[],team_b:[],
     date:new Date().toISOString().split('T')[0],
     heure:'20:30',lieu:'',is_open:true};
-  await fmSave();
-  renderFeuille();
-  showToast('Feuille ouverte !');
+  try{
+    // Tenter un PATCH d'abord (si une feuille fermée existe déjà)
+    const patch=await fetch(SUPA_URL+'/rest/v1/feuille?group_id=eq.'+activeGroup.id,{
+      method:'PATCH',
+      headers:{...HEADERS,'Authorization':'Bearer '+token,'Content-Type':'application/json','Prefer':'return=representation'},
+      body:JSON.stringify({is_open:true,date:FM.date,heure:FM.heure,presents:[],invites:[],team_a:[],team_b:[],updated_at:new Date().toISOString()})
+    });
+    const patched=await patch.json();
+    if(!patched.length){
+      // Pas de ligne existante — INSERT
+      await fetch(SUPA_URL+'/rest/v1/feuille',{
+        method:'POST',
+        headers:{...HEADERS,'Authorization':'Bearer '+token,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body:JSON.stringify({group_id:activeGroup.id,is_open:true,date:FM.date,heure:FM.heure,presents:[],invites:[],team_a:[],team_b:[]})
+      });
+    }
+    renderFeuille();
+    showToast('Feuille ouverte !');
+  }catch(e){console.error('openFeuille:',e);showToast('Erreur',true);}
 }
 
 async function fmSave(){
   if(!activeGroup||!FM.is_open)return;
   setSyncDot('loading');
+  const token=localStorage.getItem('sq_token');
+  const payload={is_open:true,date:FM.date,heure:FM.heure,lieu:FM.lieu,
+    presents:FM.presents,invites:FM.invites,
+    team_a:FM.team_a,team_b:FM.team_b,
+    updated_at:new Date().toISOString()};
   try{
-    await fetch(SUPA_URL+'/rest/v1/feuille',{method:'POST',headers:{...authH(),'Prefer':'resolution=merge-duplicates,return=minimal'},
-      body:JSON.stringify({group_id:activeGroup.id,is_open:true,date:FM.date,heure:FM.heure,lieu:FM.lieu,presents:FM.presents,invites:FM.invites,team_a:FM.team_a,team_b:FM.team_b,updated_at:new Date().toISOString()})});
+    // D'abord essayer un PATCH sur la ligne existante
+    const patch=await fetch(SUPA_URL+'/rest/v1/feuille?group_id=eq.'+activeGroup.id,{
+      method:'PATCH',
+      headers:{...HEADERS,'Authorization':'Bearer '+token,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify(payload)
+    });
+    if(!patch.ok) throw new Error(await patch.text());
+    // Si aucune ligne patchée (nouvelle feuille), faire un INSERT
+    const count=patch.headers.get('content-range');
+    if(count==='*\/0'||count==='*/0'){
+      const ins=await fetch(SUPA_URL+'/rest/v1/feuille',{
+        method:'POST',
+        headers:{...HEADERS,'Authorization':'Bearer '+token,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body:JSON.stringify({group_id:activeGroup.id,...payload})
+      });
+      if(!ins.ok) throw new Error(await ins.text());
+    }
     setSyncDot('ok');
-  }catch(e){setSyncDot('err');showToast('Erreur sauvegarde',true);}
+  }catch(e){setSyncDot('err');console.error('fmSave:',e);showToast('Erreur sauvegarde',true);}
 }
 
 function renderFeuille(){
