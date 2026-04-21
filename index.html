@@ -8,6 +8,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Squadra">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root{
   --bg:#F5F5F3;--surface:#FFFFFF;--surface2:#EFEFED;--surface3:#E5E5E2;
@@ -583,12 +585,22 @@ async function loadGroupData(){
       const p=profiles.find(pr=>pr.id===m.user_id)||{};
       const name=(p.pseudo||(((p.prenom||'')+' '+(p.nom||'')).trim()))||'Joueur';
       return {
-        id:m.user_id, role:m.role,
+        id:m.user_id, role:m.role, tags:[],
         n:name, e:p.avatar||'⚽', a:p.pseudo||'',
+        niveau:p.niveau||'',
         atk:3, def:3, phy:3,
-        ...p
+        ...p, id:m.user_id, role:m.role, n:name, e:p.avatar||'⚽'
       };
     });
+
+    // Tags des membres (visibles par tous les membres)
+    try{
+      const tags=await dbGet('member_tags','group_id=eq.'+activeGroup.id);
+      tags.forEach(t=>{
+        const m=MEMBERS.find(x=>x.id===t.user_id);
+        if(m){if(!m.tags)m.tags=[];if(!m.tags.includes(t.tag))m.tags.push(t.tag);}
+      });
+    }catch(e){console.warn('tags:',e);}
 
     // Matchs du groupe
     MATCHES=await dbGet('matches','group_id=eq.'+activeGroup.id+'&order=date.desc');
@@ -682,13 +694,26 @@ function renderGroupesPage(){
     <div class="card" style="padding:8px 14px;margin-bottom:14px">`;
     MEMBERS.forEach(m=>{
       const isMe=m.id===currentUser?.id;
-      html+=`<div class="member-row">
-        <div class="member-ava">${m.e||'⚽'}</div>
-        <div class="member-name">${esc(m.n)}${isMe?' <span style="font-size:10px;color:var(--muted)">(moi)</span>':''}</div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <div class="member-role">${m.role==='admin'?'Admin':'Membre'}</div>
-          ${isAdmin&&!isMe?`<button onclick="kickMember('${m.id.replace(/'/g,"\\'")}','${String(m.n).replace(/'/g,"\\'")}')" style="background:none;border:none;cursor:pointer;font-size:16px;padding:2px;color:var(--muted)" title="Retirer du groupe">✕</button>`:''}
+      const myTags=m.tags||[];
+      html+=`<div class="member-row" style="flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:10px;width:100%">
+          <div class="member-ava" onclick="openPublicProfile('${m.id}')" style="cursor:pointer">${m.e||'⚽'}</div>
+          <div style="flex:1;cursor:pointer" onclick="openPublicProfile('${m.id}')">
+            <div class="member-name">${esc(m.n)}${isMe?' <span style="font-size:10px;color:var(--muted)">(moi)</span>':''}</div>
+            ${m.niveau?`<div style="font-size:11px;color:var(--muted)">${{debutant:'🌱 Débutant',intermediaire:'⚡ Intermédiaire',confirme:'🔥 Confirmé',avance:'💎 Avancé',expert:'👑 Expert'}[m.niveau]||''}</div>`:''}
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <div class="member-role">${m.role==='admin'?'Admin':'Membre'}</div>
+            ${isAdmin&&!isMe?`<button onclick="kickMember('${m.id.replace(/'/g,"\\'")}','${String(m.n).replace(/'/g,"\\'")}') " style="background:none;border:none;cursor:pointer;font-size:16px;padding:2px;color:var(--muted)">✕</button>`:''}
+          </div>
         </div>
+        ${myTags.length?`<div style="display:flex;flex-wrap:wrap;gap:4px;padding-left:46px;margin-top:4px">${myTags.map(t=>`<span style="font-size:11px;padding:2px 8px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);color:var(--muted)">${t}${isAdmin?` <span onclick="removeTag('${m.id}','${t.replace(/'/g,"\\'")}')" style="cursor:pointer;margin-left:2px">×</span>`:''}</span>`).join('')}</div>`:''}
+        ${isAdmin&&!isMe?`<div style="padding-left:46px;width:100%;margin-top:4px">
+          <button onclick="toggleTagPicker('tagpicker-${m.id}')" style="font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:12px;padding:2px 10px;cursor:pointer">+ Tag</button>
+          <div id="tagpicker-${m.id}" style="display:none;flex-wrap:wrap;gap:4px;margin-top:6px">
+            ${ALL_TAGS.filter(t=>!myTags.includes(t)).map(t=>`<button onclick="addTag('${m.id}','${t.replace(/'/g,"\\'")}')" style="font-size:11px;padding:3px 10px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;color:var(--text)">${t}</button>`).join('')}
+          </div>
+        </div>`:''}
       </div>`;
     });
     html+=`</div>`;
@@ -979,6 +1004,7 @@ async function initFeuille(){
       FM.team_a=active.team_a||[]; FM.team_b=active.team_b||[];
       FM.date=active.date||new Date().toISOString().split('T')[0];
       FM.heure=active.heure||'20:30'; FM.lieu=active.lieu||'';
+      FM.lieuLat=active.lieu_lat||null; FM.lieuLon=active.lieu_lon||null;
       FM.is_open=true;
     } else {
       FM={presents:[],invites:[],team_a:[],team_b:[],date:'',heure:'20:30',lieu:'',is_open:false};
@@ -1018,6 +1044,7 @@ async function fmSave(){
   setSyncDot('loading');
   const token=localStorage.getItem('sq_token');
   const payload={is_open:true,date:FM.date,heure:FM.heure,lieu:FM.lieu,
+    lieu_lat:FM.lieuLat||null,lieu_lon:FM.lieuLon||null,
     presents:FM.presents,invites:FM.invites,
     team_a:FM.team_a,team_b:FM.team_b,
     updated_at:new Date().toISOString()};
@@ -1080,10 +1107,20 @@ function renderFeuille(){
       <input type="time" class="fm-time-input" value="${esc(FM.heure)}" onchange="FM.heure=this.value;fmSave()">
       <input type="date" class="fm-time-input" style="font-size:12px" value="${esc(FM.date)}" onchange="FM.date=this.value;fmSave()">
     </div>
-    <div class="fm-time-row" style="margin-bottom:0">
+    <div class="fm-time-row" style="margin-bottom:0;position:relative">
       <span class="fm-time-label">Lieu</span>
-      <input type="text" class="fm-time-input" style="font-size:13px;flex:1" value="${esc(FM.lieu)}" placeholder="Terrain..." onchange="FM.lieu=this.value;fmSave()">
+      <div style="flex:1;position:relative">
+        <input type="text" class="fm-time-input" style="font-size:13px;width:100%" 
+          id="lieu-input"
+          value="${esc(FM.lieu)}" 
+          placeholder="Terrain..." 
+          autocomplete="off"
+          oninput="lieuAutocomplete(this.value)"
+          onchange="if(!document.getElementById('lieu-suggestions').children.length){FM.lieu=this.value;fmSave()}">
+        <div id="lieu-suggestions" style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;z-index:50;max-height:180px;overflow-y:auto;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.15)"></div>
+      </div>
     </div>
+    ${FM.lieu&&FM.lieuLat?`<div id="fm-map" style="height:140px;border-radius:10px;margin-top:8px;overflow:hidden;border:1px solid var(--border)"></div>`:''}
     <div class="fm-counters" style="margin-top:10px">
       <div class="fm-pill fm-pill-present">✅ ${n} présent${n>1?'s':''}</div>
       <div class="fm-pill fm-pill-absent">❌ ${absent.length}</div>
@@ -1194,8 +1231,231 @@ async function saveFmMatch(){
     renderFeuille();
   }catch(e){setSyncDot('err');showToast('Erreur',true);}
 }
-// ═══ RÉSULTATS ═══
-let resultatsMode='global';
+// ═══ LIEU AUTOCOMPLETE + CARTE ═══
+let lieuMap=null, lieuMarker=null, lieuTimer=null;
+
+async function lieuAutocomplete(val){
+  const box=document.getElementById('lieu-suggestions');
+  if(!box) return;
+  clearTimeout(lieuTimer);
+  if(val.length<3){box.style.display='none';return;}
+  lieuTimer=setTimeout(async()=>{
+    try{
+      const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&q='+encodeURIComponent(val)+'&limit=5&accept-language=fr',{headers:{'User-Agent':'SquadraApp/1.0'}});
+      const results=await r.json();
+      if(!results.length){box.style.display='none';return;}
+      box.innerHTML=results.map(p=>`
+        <div onclick="pickLieu('${esc(p.display_name.replace(/'/g,"\\'"))}',${p.lat},${p.lon})"
+          style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);transition:background .1s"
+          onmouseover="this.style.background='var(--surface2)'"
+          onmouseout="this.style.background=''">
+          📍 ${esc(p.display_name.split(',').slice(0,3).join(', '))}
+        </div>`).join('');
+      box.style.display='block';
+    }catch(e){box.style.display='none';}
+  },400);
+}
+
+async function pickLieu(name, lat, lon){
+  FM.lieu=name.split(',').slice(0,2).join(', ');
+  FM.lieuLat=parseFloat(lat);
+  FM.lieuLon=parseFloat(lon);
+  const input=document.getElementById('lieu-input');
+  if(input) input.value=FM.lieu;
+  const box=document.getElementById('lieu-suggestions');
+  if(box) box.style.display='none';
+  await fmSave();
+  // Afficher/mettre à jour la carte
+  renderLieuMap();
+}
+
+function renderLieuMap(){
+  if(!FM.lieuLat) return;
+  // Si le div carte n'existe pas encore, re-render la feuille
+  if(!document.getElementById('fm-map')){renderFeuille();return;}
+  setTimeout(()=>{
+    if(lieuMap){lieuMap.remove();lieuMap=null;}
+    lieuMap=L.map('fm-map',{zoomControl:false,attributionControl:false}).setView([FM.lieuLat,FM.lieuLon],15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(lieuMap);
+    L.marker([FM.lieuLat,FM.lieuLon]).addTo(lieuMap);
+  },100);
+}
+
+// ═══ TAGS ═══
+const ALL_TAGS=[
+  '⚠️ Absent fréquent','⏰ Souvent en retard','👎 Fair-play douteux',
+  '🗣️ Mauvais esprit','😤 Mauvais perdant',
+  '👏 Fair-play exemplaire','😊 Super sympa','🤝 Toujours présent',
+  '🧠 Bon sang-froid','⭐ Joueur fiable','🔥 Leader naturel'
+];
+
+function toggleTagPicker(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.style.display=el.style.display==='none'?'flex':'none';
+}
+
+async function addTag(userId,tag){
+  if(!activeGroup||!currentUser)return;
+  const token=localStorage.getItem('sq_token');
+  try{
+    await fetch(SUPA_URL+'/rest/v1/member_tags',{
+      method:'POST',
+      headers:{...HEADERS,'Authorization':'Bearer '+token,'Prefer':'resolution=ignore-duplicates,return=minimal','Content-Type':'application/json'},
+      body:JSON.stringify({group_id:activeGroup.id,user_id:userId,tag,created_by:currentUser.id})
+    });
+    const m=MEMBERS.find(x=>x.id===userId);
+    if(m){if(!m.tags)m.tags=[];if(!m.tags.includes(tag))m.tags.push(tag);}
+    showToast('Tag ajouté');
+    renderGroupesPage();
+  }catch(e){showToast('Erreur',true);}
+}
+
+async function removeTag(userId,tag){
+  if(!activeGroup)return;
+  const token=localStorage.getItem('sq_token');
+  try{
+    await fetch(SUPA_URL+'/rest/v1/member_tags?group_id=eq.'+activeGroup.id+'&user_id=eq.'+userId+'&tag=eq.'+encodeURIComponent(tag),{
+      method:'DELETE',headers:{...HEADERS,'Authorization':'Bearer '+token}
+    });
+    const m=MEMBERS.find(x=>x.id===userId);
+    if(m&&m.tags)m.tags=m.tags.filter(t=>t!==tag);
+    showToast('Tag supprimé');
+    renderGroupesPage();
+  }catch(e){showToast('Erreur',true);}
+}
+
+// ═══ PROFIL PUBLIC ═══
+let publicProfileOverlay=null;
+
+async function openPublicProfile(userId){
+  // Créer l'overlay si nécessaire
+  let overlay=document.getElementById('public-profile-overlay');
+  if(!overlay){
+    overlay=document.createElement('div');
+    overlay.id='public-profile-overlay';
+    overlay.style.cssText='position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;padding:0';
+    overlay.onclick=(e)=>{if(e.target===overlay)overlay.remove();};
+    document.body.appendChild(overlay);
+  }
+  overlay.innerHTML=`<div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:85vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom)">
+    <div style="text-align:center;padding:20px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:2px;text-transform:uppercase;font-size:12px">Chargement...</div>
+  </div>`;
+
+  try{
+    // Charger le profil
+    const [profiles,allMatches,ratings]=await Promise.all([
+      fetch(SUPA_URL+'/rest/v1/profiles?id=eq.'+userId,{headers:authH()}).then(r=>r.json()),
+      GROUPS.length?fetch(SUPA_URL+'/rest/v1/matches?group_id=in.('+GROUPS.map(g=>g.id).join(',')+')',{headers:authH()}).then(r=>r.json()):Promise.resolve([]),
+      fetch(SUPA_URL+'/rest/v1/ratings?rated_name=in.('+encodeURIComponent(MEMBERS.find(m=>m.id===userId)?.n||'')+')',{headers:authH()}).then(r=>r.json()).catch(()=>[])
+    ]);
+
+    const p=profiles[0]||{};
+    const m=MEMBERS.find(x=>x.id===userId)||{};
+    const name=p.pseudo||((p.prenom||'')+' '+(p.nom||'')).trim()||m.n||'Joueur';
+    const tags=m.tags||[];
+
+    // Calculer stats
+    const pName=p.pseudo||((p.prenom||'')+' '+(p.nom||'')).trim();
+    let stats={w:0,d:0,l:0,g:0};
+    const history=[];
+    allMatches.forEach(match=>{
+      const tA=match.team_a||[];const tB=match.team_b||[];
+      if(![...tA,...tB].includes(pName))return;
+      const w=match.score_a>match.score_b?'A':match.score_a<match.score_b?'B':'D';
+      const inA=tA.includes(pName);
+      stats.g++;
+      if(w==='D')stats.d++;
+      else if((w==='A'&&inA)||(w==='B'&&!inA))stats.w++;
+      else stats.l++;
+      history.push({match,won:(w==='A'&&inA)||(w==='B'&&!inA),draw:w==='D'});
+    });
+
+    // Calculer notes reçues
+    let noteAtk=0,noteDef=0,notePhy=0,noteCount=0;
+    ratings.forEach(r=>{noteAtk+=r.atk||0;noteDef+=r.def||0;notePhy+=r.phy||0;noteCount++;});
+    const hasNotes=noteCount>0;
+
+    // Badges automatiques
+    const badges=[];
+    if(stats.g>=10) badges.push('🎖️ Vétéran (10+ matchs)');
+    if(stats.g>=5&&stats.w/stats.g>=0.7) badges.push('🏆 Machine à gagner');
+    if(stats.g>=5&&stats.w/stats.g>=0.5) badges.push('⚡ Régulier');
+    if(stats.d>=3) badges.push('🤝 Roi du nul');
+    if(hasNotes&&noteAtk/noteCount>=4) badges.push('⚔️ Attaquant redoutable');
+    if(hasNotes&&noteDef/noteCount>=4) badges.push('🛡️ Défenseur solide');
+    if(m.role==='admin') badges.push('👑 Admin');
+
+    const niveauLabel={debutant:'🌱 Débutant',intermediaire:'⚡ Intermédiaire',confirme:'🔥 Confirmé',avance:'💎 Avancé',expert:'👑 Expert'};
+
+    const sheet=overlay.querySelector('div');
+    sheet.innerHTML=`
+      <!-- Handle -->
+      <div style="width:36px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 0"></div>
+
+      <!-- Hero -->
+      <div style="background:var(--hbg);margin:12px 16px;border-radius:16px;padding:20px;position:relative;overflow:hidden">
+        <button onclick="document.getElementById('public-profile-overlay').remove()" style="position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:18px;width:30px;height:30px;border-radius:50%;cursor:pointer">×</button>
+        <div style="font-size:48px;margin-bottom:10px">${p.avatar||m.e||'⚽'}</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;text-transform:uppercase;color:#fff">${esc(name)}</div>
+        ${p.pseudo?`<div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:2px">@${esc(p.pseudo)}</div>`:''}
+        ${p.code_postal?`<div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px">📍 ${esc(p.code_postal)}</div>`:''}
+        ${p.niveau?`<div style="margin-top:8px;display:inline-block;padding:4px 12px;border-radius:20px;background:rgba(255,255,255,0.1);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;color:#fff">${niveauLabel[p.niveau]||''}</div>`:''}
+      </div>
+
+      <div style="padding:0 16px 24px">
+        ${p.description?`<div style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:14px;font-style:italic">"${esc(p.description)}"</div>`:''}
+
+        <!-- Tags -->
+        ${tags.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">${tags.map(t=>`<span style="font-size:12px;padding:4px 12px;border-radius:20px;background:var(--surface2);border:1px solid var(--border);color:var(--muted)">${t}</span>`).join('')}</div>`:''}
+
+        <!-- Stats -->
+        ${stats.g?`
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Statistiques</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px">
+          <div class="card" style="text-align:center;padding:10px 4px"><div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--volt)">${stats.w}</div><div style="font-size:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Vic.</div></div>
+          <div class="card" style="text-align:center;padding:10px 4px"><div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--muted)">${stats.d}</div><div style="font-size:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Nul</div></div>
+          <div class="card" style="text-align:center;padding:10px 4px"><div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--pink)">${stats.l}</div><div style="font-size:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Déf.</div></div>
+          <div class="card" style="text-align:center;padding:10px 4px"><div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--volt)">${Math.round(stats.w/stats.g*100)}%</div><div style="font-size:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Win</div></div>
+        </div>`:''}
+
+        <!-- Notes reçues -->
+        ${hasNotes?`
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Notes reçues (${noteCount} vote${noteCount>1?'s':''})</div>
+        <div class="card" style="margin-bottom:14px">
+          ${[['⚔️ Attaque',(noteAtk/noteCount)],['🛡️ Défense',(noteDef/noteCount)],['💪 Physique',(notePhy/noteCount)]].map(([l,v])=>`
+          <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">
+            <div style="font-size:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);min-width:80px">${l}</div>
+            <div style="flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden"><div style="height:100%;width:${Math.round(v/5*100)}%;background:var(--volt);border-radius:3px"></div></div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:14px;color:var(--volt);min-width:28px;text-align:right">${v.toFixed(1)}</div>
+          </div>`).join('')}
+        </div>`:''}
+
+        <!-- Badges -->
+        ${badges.length?`
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Badges</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">${badges.map(b=>`<span style="font-size:12px;padding:4px 12px;border-radius:20px;background:var(--volt-dim);border:1px solid rgba(138,184,0,0.2);color:var(--volt)">${b}</span>`).join('')}</div>`:''}
+
+        <!-- Historique -->
+        ${history.length?`
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Derniers matchs</div>
+        <div class="card" style="padding:4px 14px">${history.slice(0,8).map(h=>{
+          const w=h.won;const d=h.draw;
+          const col=d?'var(--muted)':w?'var(--volt)':'var(--pink)';
+          const lbl=d?'NUL':w?'VIC':'DÉF';
+          const date=new Date(h.match.date).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+          return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:12px;color:${col};padding:2px 10px;border-radius:12px;background:${d?'var(--surface2)':w?'var(--volt-dim)':'var(--pink-dim)'}">${lbl}</span>
+            <span style="font-size:12px;color:var(--muted)">${date}</span>
+            <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:14px">${h.match.score_a}–${h.match.score_b}</span>
+          </div>`;
+        }).join('')}</div>`:''}
+      </div>`;
+  }catch(e){
+    console.error('openPublicProfile:',e);
+    overlay.querySelector('div').innerHTML='<div style="padding:40px;text-align:center;color:var(--muted)">Erreur de chargement</div>';
+  }
+}
 
 async function renderResultats(){
   const el=document.getElementById('resultats-content');
