@@ -593,10 +593,11 @@ async function loadGroupData(){
     // Matchs du groupe
     MATCHES=await dbGet('matches','group_id=eq.'+activeGroup.id+'&order=date.desc');
 
-    // Feuille du groupe — uniquement si ouverte
-    const feuilleRows=await dbGet('feuille','group_id=eq.'+activeGroup.id+'&is_open=eq.true');
-    if(feuilleRows.length){
-      const f=feuilleRows[0];
+    // Feuille du groupe — ouverte = is_open true OU présents > 0 (robustesse si colonne null)
+    const feuilleRows=await dbGet('feuille','group_id=eq.'+activeGroup.id);
+    const feuilleActive=feuilleRows.find(f=>f.is_open===true||(f.is_open!==false&&((f.presents||[]).length>0)));
+    if(feuilleActive){
+      const f=feuilleActive;
       FM.presents=f.presents||[]; FM.invites=f.invites||[];
       FM.team_a=f.team_a||[]; FM.team_b=f.team_b||[];
       FM.date=f.date||new Date().toISOString().split('T')[0];
@@ -1323,8 +1324,12 @@ async function renderDashboard(){
   let openSheets=[];
   try{
     const groupIds=GROUPS.map(g=>g.id);
-    const sheets=await dbGet('feuille','group_id=in.('+groupIds.join(',')+')'+'&is_open=eq.true');
-    openSheets=sheets.map(s=>({...s, group:GROUPS.find(g=>g.id===s.group_id)})).filter(s=>s.group);
+    const sheets=await dbGet('feuille','group_id=in.('+groupIds.join(',')+')'+'&select=*');
+    // Considérer ouverte : is_open=true OU is_open null avec présents > 0
+    openSheets=sheets
+      .filter(s=>s.is_open===true||(s.is_open!==false&&((s.presents||[]).length>0)))
+      .map(s=>({...s, group:GROUPS.find(g=>g.id===s.group_id)}))
+      .filter(s=>s.group);
   }catch(e){console.warn('dashboard sheets:',e);}
 
   // Charger tous les matchs de toutes mes Squadras pour les stats perso
