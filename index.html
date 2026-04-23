@@ -234,10 +234,10 @@ body.dark .fm-player.fm-present{border-color:rgba(200,255,0,0.3);background:rgba
     </div>
   </div>
   <nav class="drawer-nav">
-    <button class="drawer-item" id="nav-dashboard" onclick="switchPage('dashboard',this)">
+    <button class="drawer-item active" id="nav-dashboard" onclick="switchPage('dashboard',this)">
       <span class="drawer-item-icon">🏠</span><span class="drawer-item-label">Accueil</span>
     </button>
-    <button class="drawer-item active" id="nav-feuille" onclick="switchPage('feuille',this)">
+    <button class="drawer-item" id="nav-feuille" onclick="switchPage('feuille',this)">
       <span class="drawer-item-icon">📝</span><span class="drawer-item-label">Feuille de match</span>
     </button>
     <div class="drawer-sep"></div>
@@ -275,12 +275,12 @@ body.dark .fm-player.fm-present{border-color:rgba(200,255,0,0.3);background:rgba
 </div>
 
 <!-- DASHBOARD -->
-<div class="page" id="page-dashboard">
+<div class="page active" id="page-dashboard">
   <div id="dashboard-content" style="padding-top:12px"></div>
 </div>
 
 <!-- FEUILLE -->
-<div class="page active" id="page-feuille">
+<div class="page" id="page-feuille">
   <div id="fm-body"></div>
 </div>
 
@@ -465,7 +465,8 @@ async function init(){
     if(inviteCode) localStorage.setItem('sq_pending_invite', inviteCode.toUpperCase());
     if(matchId){ await initRatingPage(parseInt(matchId)); }
     else if(currentUser && !activeGroup){ switchPage('groupes','nav-groupes'); }
-    else { initFeuille(); }
+    else if(currentUser){ switchPage('dashboard','nav-dashboard'); }
+    else { switchPage('dashboard','nav-dashboard'); }
   }catch(err){
     clearTimeout(loaderTimer);
     hideLoader();
