@@ -467,20 +467,21 @@ function updateDrawerUser(){
   updateDrawerGroup();
 }
 function updateDrawerGroup(){
-  const badge=document.getElementById('drawer-group-badge');
-  const hg=document.getElementById('header-group');
-  const fBadge=document.getElementById('bn-feuille-badge');
+  const badge=document.getElementById("drawer-group-badge");
+  const hg=document.getElementById("header-group");
+  const dgbEmoji=document.getElementById("dgb-emoji");
+  const dgbName=document.getElementById("dgb-name");
+  const fBadge=document.getElementById("bn-feuille-badge");
   if(activeGroup){
-    badge.style.display='block';
-    document.getElementById('dgb-emoji').textContent=activeGroup.avatar||'⚽';
-    document.getElementById('dgb-name').textContent=activeGroup.name;
-    hg.textContent=activeGroup.name;
+    if(badge) badge.style.display="block";
+    if(dgbEmoji) dgbEmoji.textContent=activeGroup.avatar||"⚽";
+    if(dgbName) dgbName.textContent=activeGroup.name;
+    if(hg) hg.textContent=activeGroup.name;
   } else {
-    badge.style.display='none';
-    hg.textContent='';
+    if(badge) badge.style.display="none";
+    if(hg) hg.textContent="";
   }
-  // Badge feuille ouverte
-  if(fBadge) fBadge.style.display=FM.is_open?'block':'none';
+  if(fBadge) fBadge.style.display=FM.is_open?"block":"none";
 }
 
 // ═══ NAVIGATION ═══
@@ -1320,7 +1321,7 @@ function fmRow(p,isPresent){
     <div class="fm-status">${isPresent?'✅':'○'}</div>
   </div>`;
 }
-function openFmMenu(name,isPresent){fmMenuPlayer=name;fmMenuIsPresent=isPresent;document.getElementById('fm-menu-player-name').textContent=name;document.getElementById('fm-menu-action-icon').textContent=isPresent?'❌':'✅';document.getElementById('fm-menu-action-label').textContent=isPresent?'Retirer':'Marquer présent';document.getElementById('fm-menu').style.display='flex';}
+function openFmMenu(name,isPresent){fmMenuPlayer=name;fmMenuIsPresent=isPresent;const _mn=document.getElementById('fm-menu-player-name');if(_mn)_mn.textContent=name;const _mi=document.getElementById('fm-menu-action-icon');if(_mi)_mi.textContent=isPresent?'❌':'✅';const _ml=document.getElementById('fm-menu-action-label');if(_ml)_ml.textContent=isPresent?'Retirer':'Marquer présent';const _mm=document.getElementById('fm-menu');if(_mm)_mm.style.display='flex';}
 function closeFmMenu(){document.getElementById('fm-menu').style.display='none';fmMenuPlayer=null;}
 async function fmTogglePlayer(name){
   if(!name)return;
@@ -2018,11 +2019,12 @@ function showOTPPanel(){document.getElementById('auth-login').style.display='non
 function showLoginPanel(){document.getElementById('auth-login').style.display='block';document.getElementById('auth-otp-panel').style.display='none';}
 
 async function handleLogin(){
-  const email=document.getElementById('login-email').value.trim();
-  const pwd=document.getElementById('login-pwd').value;
+  const email=document.getElementById('login-email')?.value.trim();
+  const pwd=document.getElementById('login-pwd')?.value;
   const msg=document.getElementById('login-msg');
-  if(!email||!pwd){msg.textContent='Email et mot de passe requis.';msg.style.color='var(--pink)';return;}
-  msg.textContent='Connexion...';msg.style.color='var(--muted)';
+  const setMsg=(txt,col)=>{if(msg){msg.textContent=txt;msg.style.color=col;}};
+  if(!email||!pwd){setMsg('Email et mot de passe requis.','var(--pink)');return;}
+  setMsg('Connexion...','var(--muted)');
   try{
     const r=await fetch(SUPA_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{...HEADERS,'Content-Type':'application/json'},body:JSON.stringify({email,password:pwd})});
     if(!r.ok){const err=await r.json().catch(()=>({}));throw new Error(err.error_description||'Email ou mot de passe incorrect.');}
@@ -2035,31 +2037,39 @@ async function handleLogin(){
     updateDrawerUser();
     showToast('Connecté !');
     if(!activeGroup) switchPage('groupes','nav-groupes');
-    else renderProfileEdit(document.getElementById('profil-content'));
-  }catch(e){msg.textContent=e.message.slice(0,80);msg.style.color='var(--pink)';}
+    else switchPage('dashboard','nav-dashboard');
+  }catch(e){setMsg(e.message.slice(0,80),'var(--pink)');}
 }
 
 async function handleSendOTP(){
-  const email=document.getElementById('auth-email').value.trim();
+  const emailEl=document.getElementById('auth-email');
+  const email=emailEl?.value.trim();
   const msg=document.getElementById('auth-msg');
-  if(!email||!email.includes('@')){msg.textContent='Email invalide.';msg.style.color='var(--pink)';return;}
-  msg.textContent='Envoi...';msg.style.color='var(--muted)';
+  const setMsg=(t,c)=>{if(msg){msg.textContent=t;msg.style.color=c;}};
+  if(!email||!email.includes('@')){setMsg('Email invalide.','var(--pink)');return;}
+  setMsg('Envoi...','var(--muted)');
   try{
     const r=await fetch(SUPA_URL+'/auth/v1/otp',{method:'POST',headers:{...HEADERS,'Content-Type':'application/json'},body:JSON.stringify({email,create_user:true})});
     if(!r.ok){const err=await r.json().catch(()=>({msg:r.statusText}));throw new Error(err.msg||err.message||r.statusText);}
     otpEmail2=email;
-    document.getElementById('auth-step1').style.display='none';
-    document.getElementById('auth-step2').style.display='block';
-    document.getElementById('otp-subtitle').textContent='Code envoyé à '+email+'. Vérifie les spams.';
-    document.getElementById('auth-otp').focus();
-  }catch(e){msg.textContent='Erreur : '+e.message.slice(0,80);msg.style.color='var(--pink)';}
+    const s1=document.getElementById('auth-step1');
+    const s2=document.getElementById('auth-step2');
+    const sub=document.getElementById('otp-subtitle');
+    const otp=document.getElementById('auth-otp');
+    if(s1) s1.style.display='none';
+    if(s2) s2.style.display='block';
+    if(sub) sub.textContent='Code envoyé à '+email+'. Vérifie les spams.';
+    if(otp) otp.focus();
+  }catch(e){setMsg('Erreur : '+e.message.slice(0,80),'var(--pink)');}
 }
 
 async function handleVerifyOTP(){
-  const code=document.getElementById('auth-otp').value.trim();
+  const otpEl=document.getElementById('auth-otp');
+  const code=otpEl?.value.trim();
   const msg=document.getElementById('otp-msg');
-  if(!code||code.length<6){msg.textContent='Entre le code reçu.';msg.style.color='var(--pink)';return;}
-  msg.textContent='Vérification...';msg.style.color='var(--muted)';
+  const setMsg=(t,c)=>{if(msg){msg.textContent=t;msg.style.color=c;}};
+  if(!code||code.length<6){setMsg('Entre le code reçu.','var(--pink)');return;}
+  setMsg('Vérification...','var(--muted)');
   try{
     const r=await fetch(SUPA_URL+'/auth/v1/verify',{method:'POST',headers:{...HEADERS,'Content-Type':'application/json'},body:JSON.stringify({email:otpEmail2,token:code,type:'email'})});
     if(!r.ok){const err=await r.json().catch(()=>({msg:r.statusText}));throw new Error(err.msg||err.message||'Code invalide ou expiré.');}
@@ -2071,14 +2081,17 @@ async function handleVerifyOTP(){
     await joinPendingInvite();
     updateDrawerUser();
     showToast('Bienvenue sur Squadra 🎉');
-    renderProfileEdit(document.getElementById('profil-content'), true);
-  }catch(e){msg.textContent='Erreur : '+e.message.slice(0,80);msg.style.color='var(--pink)';}
+    switchPage('dashboard','nav-dashboard');
+  }catch(e){setMsg('Erreur : '+e.message.slice(0,80),'var(--pink)');}
 }
 
 function handleBackToEmail(){
-  document.getElementById('auth-step1').style.display='block';
-  document.getElementById('auth-step2').style.display='none';
-  document.getElementById('auth-msg').textContent='';
+  const s1=document.getElementById('auth-step1');
+  const s2=document.getElementById('auth-step2');
+  const msg=document.getElementById('auth-msg');
+  if(s1) s1.style.display='block';
+  if(s2) s2.style.display='none';
+  if(msg) msg.textContent='';
 }
 
 function renderProfileEdit(el, isNew=false){
