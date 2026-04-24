@@ -103,7 +103,7 @@ body.dark .info-box{border-color:rgba(200,255,0,0.15);color:rgba(200,255,0,0.8)}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* TOAST */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--volt);color:#000;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;letter-spacing:1px;text-transform:uppercase;padding:10px 22px;border-radius:30px;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;z-index:999}
+.toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:var(--volt);color:#000;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;letter-spacing:1px;text-transform:uppercase;padding:10px 22px;border-radius:30px;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;z-index:999}
 .toast.err{background:var(--pink);color:#fff}.toast.show{opacity:1}
 
 /* GROUPES */
@@ -203,8 +203,32 @@ body.dark .fm-player.fm-present{border-color:rgba(200,255,0,0.3);background:rgba
 .avatar-opt{font-size:22px;text-align:center;padding:5px;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all .12s}
 .avatar-opt.selected{border-color:var(--volt);background:var(--volt-dim)}
 
-/* PITCH */
-.overlay{display:none;position:fixed;inset:0;z-index:100;flex-direction:column;align-items:center;justify-content:flex-start;overflow-y:auto;padding:16px;background:rgba(0,0,0,0.92)}
+/* ── BOTTOM NAV ── */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:stretch;z-index:30;padding-bottom:env(safe-area-inset-bottom)}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border:none;background:none;padding:8px 4px;position:relative;transition:all .12s}
+.bn-item:active{opacity:0.7}
+.bn-icon{font-size:20px;line-height:1;transition:transform .15s}
+.bn-label{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);transition:color .15s}
+.bn-item.active .bn-icon{transform:scale(1.15)}
+.bn-item.active .bn-label{color:var(--volt)}
+.bn-badge{position:absolute;top:6px;right:calc(50% - 14px);width:8px;height:8px;background:var(--pink);border-radius:50%;border:2px solid var(--surface)}
+main{padding:16px;padding-bottom:76px;max-width:520px;margin:0 auto}
+
+/* ── SKELETONS ── */
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+.sk{background:linear-gradient(90deg,var(--surface2) 25%,var(--surface3) 50%,var(--surface2) 75%);background-size:800px 100%;animation:shimmer 1.4s infinite linear;border-radius:8px}
+.sk-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px}
+.sk-line{height:14px;margin-bottom:8px}
+.sk-line.tall{height:28px}
+.sk-line.short{width:60%}
+.sk-line.medium{width:80%}
+.sk-avatar{width:36px;height:36px;border-radius:50%}
+
+/* ── FM FLASH FEEDBACK ── */
+@keyframes fm-flash{0%{background:rgba(138,184,0,0.15)}100%{background:transparent}}
+body.dark @keyframes fm-flash{0%{background:rgba(200,255,0,0.12)}100%{background:transparent}}
+.fm-flash{animation:fm-flash .5s ease-out}
+body.dark .fm-flash{animation:fm-flash .5s ease-out}
 </style>
 </head>
 <body>
@@ -337,7 +361,26 @@ body.dark .fm-player.fm-present{border-color:rgba(200,255,0,0.3);background:rgba
 
 </main>
 
-<div class="toast" id="toast"></div>
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="bn-item active" id="bn-dashboard" onclick="switchPage('dashboard',this)">
+    <span class="bn-icon">🏠</span>
+    <span class="bn-label">Accueil</span>
+  </button>
+  <button class="bn-item" id="bn-feuille" onclick="switchPage('feuille',this)">
+    <span class="bn-icon">📝</span>
+    <span class="bn-label">Feuille</span>
+    <span class="bn-badge" id="bn-feuille-badge" style="display:none"></span>
+  </button>
+  <button class="bn-item" id="bn-resultats" onclick="switchPage('resultats',this)">
+    <span class="bn-icon">📋</span>
+    <span class="bn-label">Résultats</span>
+  </button>
+  <button class="bn-item" id="bn-profil" onclick="switchPage('profil',null)">
+    <span class="bn-icon" id="bn-profil-icon">👤</span>
+    <span class="bn-label">Profil</span>
+  </button>
+</nav>
 
 <!-- PITCH OVERLAY -->
 <div class="overlay" id="pitch-overlay">
@@ -403,20 +446,30 @@ function updateDrawerUser(){
   const ava=document.getElementById('drawer-ava');
   const name=document.getElementById('drawer-uname');
   const sub=document.getElementById('drawer-usub');
+  const bnIcon=document.getElementById('bn-profil-icon');
   if(currentProfile?.prenom||currentProfile?.pseudo){
-    ava.textContent=currentProfile.avatar||'⚽';
-    name.textContent=currentProfile.pseudo?'@'+currentProfile.pseudo:currentProfile.prenom;
-    sub.textContent='Voir mon profil';
+    const emoji=currentProfile.avatar||'⚽';
+    if(ava) ava.textContent=emoji;
+    if(bnIcon) bnIcon.textContent=emoji;
+    if(name) name.textContent=currentProfile.pseudo?'@'+currentProfile.pseudo:currentProfile.prenom;
+    if(sub) sub.textContent='Voir mon profil';
   } else if(currentUser){
-    ava.textContent='👤'; name.textContent='Mon profil'; sub.textContent='Compléter le profil';
+    if(ava) ava.textContent='👤';
+    if(bnIcon) bnIcon.textContent='👤';
+    if(name) name.textContent='Mon profil';
+    if(sub) sub.textContent='Compléter le profil';
   } else {
-    ava.textContent='👤'; name.textContent='Mon profil'; sub.textContent='Se connecter';
+    if(ava) ava.textContent='👤';
+    if(bnIcon) bnIcon.textContent='👤';
+    if(name) name.textContent='Mon profil';
+    if(sub) sub.textContent='Se connecter';
   }
   updateDrawerGroup();
 }
 function updateDrawerGroup(){
   const badge=document.getElementById('drawer-group-badge');
   const hg=document.getElementById('header-group');
+  const fBadge=document.getElementById('bn-feuille-badge');
   if(activeGroup){
     badge.style.display='block';
     document.getElementById('dgb-emoji').textContent=activeGroup.avatar||'⚽';
@@ -426,21 +479,27 @@ function updateDrawerGroup(){
     badge.style.display='none';
     hg.textContent='';
   }
+  // Badge feuille ouverte
+  if(fBadge) fBadge.style.display=FM.is_open?'block':'none';
 }
 
 // ═══ NAVIGATION ═══
 function switchPage(page,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.drawer-item').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.bn-item').forEach(t=>t.classList.remove('active'));
   const el=document.getElementById('page-'+page);
   if(el) el.classList.add('active');
   const navEl=typeof btn==='string'?document.getElementById(btn):btn;
-  if(navEl) navEl.classList.add('active');
+  if(navEl&&navEl.classList.contains('drawer-item')) navEl.classList.add('active');
+  const bnEl=document.getElementById('bn-'+page);
+  if(bnEl) bnEl.classList.add('active');
   closeDrawer();
   if(page==='groupes') renderGroupesPage();
   if(page==='profil') renderProfilPage();
   if(page==='dashboard') renderDashboard();
-  if(page==='feuille') initFeuille();  if(page==='resultats') renderResultats();
+  if(page==='feuille') initFeuille();
+  if(page==='resultats') renderResultats();
   if(page==='stats') renderStats();
 }
 
@@ -1213,8 +1272,43 @@ function renderFeuille(){
   <button class="btn btn-pink" onclick="resetFeuille()">Nouvelle feuille</button>`;
 
   document.getElementById('fm-body').innerHTML=html;
+  setTimeout(initFmSwipe, 50);
 }
 
+// ── Swipe sur les joueurs de la feuille ──
+let swipeStart=null;
+function initFmSwipe(){
+  document.querySelectorAll('.fm-player').forEach(el=>{
+    let startX=0,startY=0,moved=false;
+    el.addEventListener('touchstart',e=>{
+      startX=e.touches[0].clientX;startY=e.touches[0].clientY;moved=false;
+    },{passive:true});
+    el.addEventListener('touchmove',e=>{
+      const dx=e.touches[0].clientX-startX;
+      const dy=Math.abs(e.touches[0].clientY-startY);
+      if(dy>20)return; // Scroll vertical
+      if(Math.abs(dx)>10){moved=true;el.style.transform=`translateX(${Math.max(-80,Math.min(0,dx))}px)`;el.style.transition='none';}
+    },{passive:true});
+    el.addEventListener('touchend',e=>{
+      const dx=e.changedTouches[0].clientX-startX;
+      el.style.transition='transform .2s';
+      el.style.transform='translateX(0)';
+      if(!moved)return;
+      const name=el.querySelector('.fm-player-name')?.textContent.trim();
+      if(!name)return;
+      const isPresent=el.classList.contains('fm-present');
+      if(dx<-60&&isPresent){
+        // Swipe gauche = retirer
+        fmMenuPlayer=name;fmMenuIsPresent=true;fmTogglePlayer(name);
+      } else if(dx>60&&!isPresent){
+        // Swipe droit = ajouter
+        fmMenuPlayer=name;fmMenuIsPresent=false;fmTogglePlayer(name);
+      }
+    });
+  });
+}
+
+// Appeler après renderFeuille
 function fmRow(p,isPresent){
   const safe=String(p.n).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
   return `<div class="fm-player${isPresent?' fm-present':''}" onclick="openFmMenu('${safe}',${isPresent})">
@@ -1228,7 +1322,25 @@ function fmRow(p,isPresent){
 }
 function openFmMenu(name,isPresent){fmMenuPlayer=name;fmMenuIsPresent=isPresent;document.getElementById('fm-menu-player-name').textContent=name;document.getElementById('fm-menu-action-icon').textContent=isPresent?'❌':'✅';document.getElementById('fm-menu-action-label').textContent=isPresent?'Retirer':'Marquer présent';document.getElementById('fm-menu').style.display='flex';}
 function closeFmMenu(){document.getElementById('fm-menu').style.display='none';fmMenuPlayer=null;}
-async function fmTogglePlayer(name){if(!name)return;if(fmMenuIsPresent){FM.presents=FM.presents.filter(n=>n!==name);}else{FM.presents.push(name);}FM.team_a=[];FM.team_b=[];closeFmMenu();await fmSave();renderFeuille();}
+async function fmTogglePlayer(name){
+  if(!name)return;
+  if(fmMenuIsPresent){FM.presents=FM.presents.filter(n=>n!==name);}
+  else{FM.presents.push(name);}
+  FM.team_a=[];FM.team_b=[];
+  closeFmMenu();
+  await fmSave();
+  renderFeuille();
+  // Flash feedback sur le joueur
+  setTimeout(()=>{
+    const rows=document.querySelectorAll('.fm-player');
+    rows.forEach(row=>{
+      if(row.querySelector('.fm-player-name')?.textContent.trim()===name){
+        row.classList.add('fm-flash');
+        setTimeout(()=>row.classList.remove('fm-flash'),500);
+      }
+    });
+  },50);
+}
 async function fmAddGuest(){const n=document.getElementById('fm-guest-name').value.trim();if(!n){showToast('Prénom requis',true);return;}if([...MEMBERS,...FM.invites].find(p=>p.n===n)){showToast('Nom déjà utilisé',true);return;}FM.invites.push({n,a:'Invité',e:'👤',atk:3,def:3,phy:3});FM.presents.push(n);FM.team_a=[];FM.team_b=[];document.getElementById('fm-guest-name').value='';await fmSave();renderFeuille();}
 
 function bestSplit(pool){const h=Math.floor(pool.length/2);let best=Infinity,bestA=null;function go(i,chosen){if(chosen.length===h){const cB=pool.filter(p=>!chosen.includes(p));const sA=chosen.reduce((s,p)=>s+avg(p),0);const sB=cB.reduce((s,p)=>s+avg(p),0);const score=Math.abs(sA-sB);if(score<best){best=score;bestA=[...chosen];}return;}if(i>=pool.length)return;if(pool.length-i<h-chosen.length)return;go(i+1,[...chosen,pool[i]]);go(i+1,chosen);}go(0,[]);return{A:bestA,B:pool.filter(p=>!bestA.includes(p))};}
@@ -1629,7 +1741,20 @@ async function renderStats(){
   }
 
   if(!players.length){
-    html+=`<div style="text-align:center;padding:24px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:1px">Pas encore de matchs</div>`;
+    html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;text-align:center">
+      <div style="font-size:48px;margin-bottom:12px">📊</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;text-transform:uppercase;margin-bottom:8px">Aucune stat pour l'instant</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px">Les classements apparaissent dès qu'un match est enregistré.</div>
+      <div style="display:flex;flex-direction:column;gap:8px;text-align:left">
+        ${[['1','Ouvre une feuille de match','📋'],['2','Coche les joueurs présents','✅'],['3','Génère les équipes et joue','⚽'],['4','Enregistre le score','🏆']].map(([n,t,e])=>`
+        <div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--surface2);border-radius:10px">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:var(--volt);min-width:20px">${n}</div>
+          <div style="font-size:13px;color:var(--text);flex:1">${t}</div>
+          <div style="font-size:20px">${e}</div>
+        </div>`).join('')}
+      </div>
+      <button class="btn btn-volt" onclick="switchPage('feuille','nav-feuille')" style="margin-top:16px;margin-bottom:0">Ouvrir la feuille</button>
+    </div>`;
   } else {
     html+=players.map((p,i)=>{
       const s=stats[p.n];
@@ -1727,7 +1852,10 @@ async function renderDashboard(){
     return;
   }
 
-  el.innerHTML=`<div style="padding-top:12px;text-align:center;padding:40px;color:var(--muted)">Chargement...</div>`;
+  el.innerHTML=`<div style="padding-top:12px;text-align:center;padding:40px;color:var(--muted)">
+    <div class="sk-card"><div class="sk sk-line tall" style="margin-bottom:12px"></div><div class="sk sk-line medium" style="margin-bottom:8px"></div><div class="sk sk-line short"></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="sk-card"><div class="sk sk-line tall"></div></div><div class="sk-card"><div class="sk sk-line tall"></div></div></div>
+  </div>`;
   setSyncDot('loading');
 
   // Charger toutes les feuilles ouvertes de toutes mes Squadras
