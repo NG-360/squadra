@@ -11,37 +11,8 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-/* ── Palette Squadra Brand ── */
+/* ── Palette Squadra — Full Dark ── */
 :root{
-  /* Mode jour */
-  --bg:#F0F0EE;
-  --surface:#FFFFFF;
-  --surface2:#E8E8E8;
-  --surface3:#D8D8D6;
-
-  --neon:#B6FF00;
-  --neon-dim:rgba(182,255,0,0.12);
-  --neon-glow:rgba(182,255,0,0.25);
-
-  --accent:#FF4D00;
-  --accent-dim:rgba(255,77,0,0.08);
-
-  --text:#0B0B0D;
-  --muted:#8A8F98;
-  --border:rgba(0,0,0,0.08);
-  --border2:rgba(0,0,0,0.16);
-
-  --radius:14px;--radius-sm:8px;
-
-  /* Header toujours dark */
-  --hbg:#0B0B0D;--htext:#E8E8E8;--hneon:#B6FF00;
-
-  /* Alias compat */
-  --volt:var(--neon);--volt-dim:var(--neon-dim);
-  --pink:var(--accent);--pink-dim:var(--accent-dim);
-  --hvolt:var(--hneon);
-}
-body.dark{
   --bg:#0B0B0D;
   --surface:#1A1B1F;
   --surface2:#22232A;
@@ -59,7 +30,14 @@ body.dark{
   --border:rgba(255,255,255,0.07);
   --border2:rgba(255,255,255,0.14);
 
+  --radius:14px;--radius-sm:8px;
+
   --hbg:#1A1B1F;--htext:#E8E8E8;--hneon:#B6FF00;
+
+  /* Alias compat */
+  --volt:var(--neon);--volt-dim:var(--neon-dim);
+  --pink:var(--accent);--pink-dim:var(--accent-dim);
+  --hvolt:var(--hneon);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
@@ -91,19 +69,19 @@ body.dark .drawer-group-badge{border-color:rgba(200,255,0,0.2)}
 .drawer-item:hover{background:var(--surface2)}
 .drawer-item.active{background:var(--volt-dim);border-left-color:var(--volt)}
 .drawer-item-icon{font-size:18px;width:24px;text-align:center;flex-shrink:0}
-.drawer-item-label{font-family:'Sora',sans-serif;font-weight:700;font-size:15px;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted)}
+.drawer-item-label{font-family:'Inter',sans-serif;font-weight:700;font-size:15px;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted)}
 .drawer-item.active .drawer-item-label{color:var(--volt)}
 .drawer-sep{height:1px;background:var(--border);margin:4px 20px}
 .drawer-bottom{flex-shrink:0;border-top:1px solid var(--border)}
-.drawer-dark-row{display:flex;align-items:center;justify-content:space-between;padding:12px 20px}
-.dark-lbl{font-family:'Sora',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
-.dark-btn{width:44px;height:24px;border-radius:12px;background:var(--surface3);border:1px solid var(--border);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
-.dark-btn.on{background:var(--volt)}
-.dark-knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
-.dark-btn.on .dark-knob{transform:translateX(20px)}
+
+
+
+
+
+
 .drawer-user{display:flex;align-items:center;gap:10px;padding:12px 20px;cursor:pointer;border-top:1px solid var(--border)}
 .drawer-user-ava{font-size:20px;width:34px;height:34px;background:var(--surface2);border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);flex-shrink:0}
-.drawer-user-name{font-family:'Sora',sans-serif;font-weight:700;font-size:14px;text-transform:uppercase;color:var(--text)}
+.drawer-user-name{font-family:'Inter',sans-serif;font-weight:700;font-size:14px;text-transform:uppercase;color:var(--text)}
 .drawer-user-sub{font-size:11px;color:var(--muted)}
 
 /* MAIN */
@@ -111,7 +89,7 @@ main{padding:16px;max-width:520px;margin:0 auto}
 .page{display:none}.page.active{display:block}
 
 /* UTILS */
-.btn{width:100%;padding:14px;border-radius:var(--radius);font-family:'Sora',sans-serif;font-size:15px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;border:none;transition:all .15s;margin-bottom:10px}
+.btn{width:100%;padding:14px;border-radius:var(--radius);font-family:'Inter',sans-serif;font-size:15px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;border:none;transition:all .15s;margin-bottom:10px}
 .btn:active{transform:scale(0.97)}
 .btn-volt{background:var(--volt);color:#000}.btn-volt:disabled{background:var(--surface3);color:var(--muted);cursor:not-allowed;transform:none}
 .btn-outline{background:transparent;color:var(--text);border:1px solid var(--border2)}
@@ -120,13 +98,13 @@ main{padding:16px;max-width:520px;margin:0 auto}
 .fld{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-size:14px;color:var(--text);font-family:'Inter',sans-serif;width:100%}
 .fld::placeholder{color:var(--muted)}.fld:focus{outline:none;border-color:var(--volt)}
 .sep{border:none;border-top:1px solid var(--border);margin:16px 0}
-.section-title{font-family:'Sora',sans-serif;font-weight:800;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin:16px 0 10px}
+.section-title{font-family:'Inter',sans-serif;font-weight:800;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin:16px 0 10px}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px}
-.card-title{font-family:'Sora',sans-serif;font-weight:900;font-size:16px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text);margin-bottom:4px}
+.card-title{font-family:'Inter',sans-serif;font-weight:900;font-size:16px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text);margin-bottom:4px}
 .card-sub{font-size:12px;color:var(--muted);line-height:1.5}
-.field-label{font-family:'Sora',sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px}
+.field-label{font-family:'Inter',sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px}
 .info-box{background:var(--volt-dim);border:1px solid rgba(138,184,0,0.2);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--volt);margin-bottom:12px;line-height:1.6}
-body.dark .info-box{border-color:rgba(200,255,0,0.15);color:rgba(200,255,0,0.8)}
+.info-box.dark-override{border-color:rgba(200,255,0,0.15);color:rgba(200,255,0,0.8)}
 
 /* LOADING */
 .loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:199;gap:20px;transition:opacity .4s;pointer-events:none}
@@ -137,7 +115,7 @@ body.dark .info-box{border-color:rgba(200,255,0,0.15);color:rgba(200,255,0,0.8)}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* TOAST */
-.toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:var(--volt);color:#000;font-family:'Sora',sans-serif;font-weight:800;font-size:14px;letter-spacing:1px;text-transform:uppercase;padding:10px 22px;border-radius:30px;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;z-index:999}
+.toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:var(--volt);color:#000;font-family:'Inter',sans-serif;font-weight:800;font-size:14px;letter-spacing:1px;text-transform:uppercase;padding:10px 22px;border-radius:30px;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;z-index:999}
 .toast.err{background:var(--pink);color:#fff}.toast.show{opacity:1}
 
 /* GROUPES */
@@ -146,41 +124,41 @@ body.dark .info-box{border-color:rgba(200,255,0,0.15);color:rgba(200,255,0,0.8)}
 .group-card.active-group{border-color:var(--volt);border-width:2px;background:var(--volt-dim)}
 .group-ava{font-size:32px;flex-shrink:0}
 .group-info{flex:1;min-width:0}
-.group-name{font-family:'Sora',sans-serif;font-weight:900;font-size:18px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text)}
+.group-name{font-family:'Inter',sans-serif;font-weight:900;font-size:18px;text-transform:uppercase;letter-spacing:0.3px;color:var(--text)}
 .group-meta{font-size:12px;color:var(--muted);margin-top:2px}
-.group-role{font-family:'Sora',sans-serif;font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:20px;flex-shrink:0}
+.group-role{font-family:'Inter',sans-serif;font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:20px;flex-shrink:0}
 .role-admin{background:rgba(255,45,120,0.1);color:var(--pink)}
 .role-member{background:var(--surface2);color:var(--muted)}
 .group-code{font-family:'Sora',sans-serif;font-size:22px;font-weight:900;letter-spacing:4px;color:var(--volt);text-align:center;padding:16px;background:var(--surface2);border-radius:10px;margin:12px 0;cursor:pointer}
 .member-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
 .member-row:last-child{border-bottom:none}
 .member-ava{font-size:20px;width:36px;height:36px;background:var(--surface2);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.member-name{font-family:'Sora',sans-serif;font-weight:700;font-size:15px;text-transform:uppercase;flex:1}
-.member-role{font-family:'Sora',sans-serif;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.member-name{font-family:'Inter',sans-serif;font-weight:700;font-size:15px;text-transform:uppercase;flex:1}
+.member-role{font-family:'Inter',sans-serif;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
 
 /* FEUILLE */
 .fm-header{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px}
 .fm-time-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
-.fm-time-label{font-family:'Sora',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.fm-time-label{font-family:'Inter',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
 .fm-time-input{font-family:'Sora',sans-serif;font-weight:800;font-size:15px;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px}
 .fm-time-input:focus{outline:none;border-color:var(--volt)}
 .fm-counters{display:flex;gap:6px;flex-wrap:wrap}
-.fm-pill{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-family:'Sora',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase}
+.fm-pill{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase}
 .fm-pill-present{background:var(--volt-dim);color:var(--volt);border:1px solid rgba(138,184,0,0.2)}
-body.dark .fm-pill-present{border-color:rgba(200,255,0,0.2)}
+.fm-pill-present{border-color:rgba(200,255,0,0.2)}
 .fm-pill-absent{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
 .fm-section{margin-bottom:14px}
 .fm-section-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .fm-section-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.fm-section-title{font-family:'Sora',sans-serif;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
-.fm-section-count{font-family:'Sora',sans-serif;font-size:11px;font-weight:700;color:var(--muted);margin-left:auto}
+.fm-section-title{font-family:'Inter',sans-serif;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.fm-section-count{font-family:'Inter',sans-serif;font-size:11px;font-weight:700;color:var(--muted);margin-left:auto}
 .fm-player{display:flex;align-items:center;gap:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;transition:all .12s;user-select:none}
 .fm-player:active{transform:scale(0.98)}
 .fm-player.fm-present{border-color:rgba(138,184,0,0.3);background:rgba(138,184,0,0.04)}
-body.dark .fm-player.fm-present{border-color:rgba(200,255,0,0.3);background:rgba(200,255,0,0.04)}
+.fm-player.fm-present.dark-override{border-color:rgba(200,255,0,0.3);background:rgba(200,255,0,0.04)}
 .fm-player-emoji{font-size:22px;line-height:1}
 .fm-player-info{flex:1;min-width:0}
-.fm-player-name{font-family:'Sora',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;color:var(--text)}
+.fm-player-name{font-family:'Inter',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;color:var(--text)}
 .fm-player-alias{font-size:11px;color:var(--muted)}
 .fm-player-score{font-family:'Sora',sans-serif;font-size:14px;font-weight:800;color:var(--muted)}
 .fm-status{font-size:18px;flex-shrink:0}
@@ -188,19 +166,19 @@ body.dark .fm-player.fm-present{border-color:rgba(200,255,0,0.3);background:rgba
 .fm-player.fm-present .fm-player-score{color:var(--volt)}
 .fm-menu-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);display:flex;align-items:flex-end;justify-content:center}
 .fm-menu{background:var(--surface);border-radius:20px 20px 0 0;padding:16px;width:100%;max-width:520px}
-.fm-menu-title{font-family:'Sora',sans-serif;font-weight:900;font-size:18px;text-transform:uppercase;letter-spacing:0.5px;text-align:center;margin-bottom:14px;color:var(--text)}
+.fm-menu-title{font-family:'Inter',sans-serif;font-weight:900;font-size:18px;text-transform:uppercase;letter-spacing:0.5px;text-align:center;margin-bottom:14px;color:var(--text)}
 .fm-menu-btn{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--border);border-radius:12px;margin-bottom:8px;cursor:pointer;background:var(--surface2);width:100%;transition:background .12s}
 .fm-menu-btn:active{transform:scale(0.98)}
 .fm-menu-btn-icon{font-size:22px;width:28px;text-align:center}
-.fm-menu-btn-label{font-family:'Sora',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text)}
-.fm-menu-cancel{text-align:center;padding:12px;font-family:'Sora',sans-serif;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);cursor:pointer;border:none;background:none;width:100%}
+.fm-menu-btn-label{font-family:'Inter',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text)}
+.fm-menu-cancel{text-align:center;padding:12px;font-family:'Inter',sans-serif;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);cursor:pointer;border:none;background:none;width:100%}
 .fm-score-modal{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;padding:16px}
 .fm-score-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;width:100%;max-width:400px}
-.fm-score-title{font-family:'Sora',sans-serif;font-weight:900;font-size:22px;text-transform:uppercase;letter-spacing:1px;text-align:center;margin-bottom:20px;color:var(--text)}
+.fm-score-title{font-family:'Inter',sans-serif;font-weight:900;font-size:22px;text-transform:uppercase;letter-spacing:1px;text-align:center;margin-bottom:20px;color:var(--text)}
 .fm-score-row{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:20px}
 .fm-score-input{font-family:'Sora',sans-serif;font-weight:900;font-size:44px;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;color:var(--volt);width:100%}
 .fm-score-input:focus{outline:none;border-color:var(--volt)}
-.fm-score-sep{font-family:'Sora',sans-serif;font-weight:900;font-size:28px;color:var(--muted);text-align:center}
+.fm-score-sep{font-family:'Inter',sans-serif;font-weight:900;font-size:28px;color:var(--muted);text-align:center}
 .teams{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .tcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;position:relative;overflow:hidden}
 .tcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
@@ -213,19 +191,19 @@ body.dark .fm-player.fm-present{border-color:rgba(200,255,0,0.3);background:rgba
 /* MATCH HISTORY */
 .match-entry{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px}
 .match-score{font-family:'Sora',sans-serif;font-size:26px;font-weight:900;text-align:center;margin:4px 0}
-.match-date{font-size:11px;color:var(--muted);text-align:center;margin-bottom:8px;font-family:'Sora',sans-serif;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.match-date{font-size:11px;color:var(--muted);text-align:center;margin-bottom:8px;font-family:'Inter',sans-serif;font-weight:700;letter-spacing:1px;text-transform:uppercase}
 .match-teams{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:start}
-.match-team-name{font-family:'Sora',sans-serif;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.match-team-name{font-family:'Inter',sans-serif;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
 .mt-a{color:var(--volt)}.mt-b{color:var(--pink)}
 .match-players{font-size:12px;color:var(--muted);line-height:1.6}
-.match-vs{font-family:'Sora',sans-serif;font-weight:900;font-size:14px;color:var(--muted);padding-top:2px}
+.match-vs{font-family:'Inter',sans-serif;font-weight:900;font-size:14px;color:var(--muted);padding-top:2px}
 
 /* STATS */
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:8px}
 .stat-bars{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .stat-col{text-align:center}
-.stat-val{font-family:'Sora',sans-serif;font-size:22px;font-weight:900}
-.stat-lbl{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:1px;font-family:'Sora',sans-serif;font-weight:700}
+.stat-val{font-family:'Inter',sans-serif;font-size:22px;font-weight:900}
+.stat-lbl{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:1px;font-family:'Inter',sans-serif;font-weight:700}
 .stat-w{color:var(--volt)}.stat-d{color:var(--muted)}.stat-l{color:var(--pink)}
 
 /* AUTH / PROFIL */
@@ -245,7 +223,7 @@ body.dark .fm-player.fm-present{border-color:rgba(200,255,0,0.3);background:rgba
 .bn-item.active{color:var(--neon)}
 .bn-item.active .bn-svg{transform:scale(1.12);filter:drop-shadow(0 0 5px rgba(182,255,0,0.5))}
 .bn-item.active::before{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:var(--neon);border-radius:0 0 2px 2px}
-.bn-label{font-family:'Sora',sans-serif;font-weight:700;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:inherit;transition:color .15s}
+.bn-label{font-family:'Inter',sans-serif;font-weight:700;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:inherit;transition:color .15s}
 .bn-badge{position:absolute;top:6px;right:calc(50% - 14px);width:8px;height:8px;background:var(--accent);border-radius:50%;border:2px solid var(--surface)}
 main{padding:16px;padding-bottom:76px;max-width:520px;margin:0 auto}
 
@@ -334,10 +312,6 @@ body.dark .fm-flash{animation:fm-flash .5s ease-out}
     </button>
   </nav>
   <div class="drawer-bottom">
-    <div class="drawer-dark-row">
-      <span class="dark-lbl" id="dark-label">Mode nuit</span>
-      <div class="dark-btn" id="dark-btn" onclick="toggleDark()"><div class="dark-knob"></div></div>
-    </div>
     <div class="drawer-user" onclick="switchPage('profil',null);closeDrawer()">
       <div class="drawer-user-ava" id="drawer-ava">👤</div>
       <div>
@@ -382,9 +356,9 @@ body.dark .fm-flash{animation:fm-flash .5s ease-out}
   <div class="fm-score-card">
     <div class="fm-score-title">Score final</div>
     <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:4px;text-align:center;margin-bottom:8px">
-      <div style="font-family:'Sora',sans-serif;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--volt)">Éq. A</div>
+      <div style="font-family:'Inter',sans-serif;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--volt)">Éq. A</div>
       <div></div>
-      <div style="font-family:'Sora',sans-serif;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--pink)">Éq. B</div>
+      <div style="font-family:'Inter',sans-serif;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--pink)">Éq. B</div>
     </div>
     <div class="fm-score-row">
       <input type="number" class="fm-score-input" id="fm-score-a" min="0" max="99" value="0">
@@ -461,12 +435,12 @@ body.dark .fm-flash{animation:fm-flash .5s ease-out}
 <div id="pitch-overlay" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.92);flex-direction:column;align-items:center;justify-content:flex-start;overflow-y:auto;padding:16px">
   <div style="width:100%;max-width:560px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <span style="font-family:'Sora',sans-serif;font-weight:900;font-size:16px;letter-spacing:1px;text-transform:uppercase;color:#fff">Compo terrain</span>
+      <span style="font-family:'Inter',sans-serif;font-weight:900;font-size:16px;letter-spacing:1px;text-transform:uppercase;color:#fff">Compo terrain</span>
       <button onclick="hidePitch()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:20px;width:34px;height:34px;border-radius:50%;cursor:pointer">×</button>
     </div>
     <canvas id="pitch-canvas" style="width:100%;border-radius:12px;display:block"></canvas>
-    <button onclick="downloadPitch()" style="margin-top:12px;width:100%;padding:14px;background:var(--volt);border:none;border-radius:12px;font-family:'Sora',sans-serif;font-weight:900;font-size:15px;letter-spacing:2px;text-transform:uppercase;color:#000;cursor:pointer">Enregistrer PNG</button>
-    <button onclick="hidePitch()" style="margin-top:8px;width:100%;padding:12px;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:12px;font-family:'Sora',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.4);cursor:pointer">Fermer</button>
+    <button onclick="downloadPitch()" style="margin-top:12px;width:100%;padding:14px;background:var(--volt);border:none;border-radius:12px;font-family:'Inter',sans-serif;font-weight:900;font-size:15px;letter-spacing:2px;text-transform:uppercase;color:#000;cursor:pointer">Enregistrer PNG</button>
+    <button onclick="hidePitch()" style="margin-top:8px;width:100%;padding:12px;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:12px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.4);cursor:pointer">Fermer</button>
   </div>
 </div>
 
@@ -500,21 +474,6 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 function avg(p){return((+p.atk||3)+(+p.def||3)+(+p.phy||3))/3;}
 
 // ═══ DARK MODE ═══
-function toggleDark(){
-  const d=document.body.classList.toggle('dark');
-  localStorage.setItem('sq_dark',d?'1':'0');
-  document.getElementById('dark-btn')?.classList.toggle('on',d);
-  const dl=document.getElementById('dark-label');
-  if(dl) dl.textContent=d?'Mode jour':'Mode nuit';
-}
-function initDark(){
-  if(localStorage.getItem('sq_dark')==='1'){
-    document.body.classList.add('dark');
-    document.getElementById('dark-btn')?.classList.add('on');
-    const dl=document.getElementById('dark-label');
-    if(dl) dl.textContent='Mode jour';
-  }
-}
 
 // ═══ DRAWER ═══
 function openDrawer(){document.getElementById('drawer').classList.add('open');document.getElementById('drawer-overlay').classList.add('open');}
@@ -579,7 +538,6 @@ function switchPage(page,btn){
 
 // ═══ INIT ═══
 async function init(){
-  initDark();
   const loaderTimer=setTimeout(()=>hideLoader(),3000);
   setSyncDot('loading');
   try{
@@ -1250,7 +1208,7 @@ async function fmSave(){
 function renderFeuille(){
   // ── Feuille fermée ──
   if(!FM.is_open){
-    const squadraSelector=GROUPS.length>1?`<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:16px;scrollbar-width:none">${GROUPS.map(g=>{const isActive=activeGroup?.id===g.id;return`<button onclick="switchFmGroup('${g.id}')" style="flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid ${isActive?'var(--volt)':'var(--border)'};background:${isActive?'var(--volt-dim)':'var(--surface)'};font-family:'Sora',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:${isActive?'var(--volt)':'var(--muted)'};cursor:pointer;white-space:nowrap">${g.avatar||'⚽'} ${esc(g.name)}</button>`;}).join('')}</div>`:'';
+    const squadraSelector=GROUPS.length>1?`<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:16px;scrollbar-width:none">${GROUPS.map(g=>{const isActive=activeGroup?.id===g.id;return`<button onclick="switchFmGroup('${g.id}')" style="flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid ${isActive?'var(--volt)':'var(--border)'};background:${isActive?'var(--volt-dim)':'var(--surface)'};font-family:'Inter',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:${isActive?'var(--volt)':'var(--muted)'};cursor:pointer;white-space:nowrap">${g.avatar||'⚽'} ${esc(g.name)}</button>`;}).join('')}</div>`:'';
     document.getElementById('fm-body').innerHTML=`
       ${squadraSelector}
       <div style="text-align:center;padding:40px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)">
@@ -1273,7 +1231,7 @@ function renderFeuille(){
     html+=`<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;scrollbar-width:none">`;
     GROUPS.forEach(g=>{
       const isActive=activeGroup?.id===g.id;
-      html+=`<button onclick="switchFmGroup('${g.id}')" style="flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid ${isActive?'var(--volt)':'var(--border)'};background:${isActive?'var(--volt-dim)':'var(--surface)'};font-family:'Sora',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:${isActive?'var(--volt)':'var(--muted)'};cursor:pointer;white-space:nowrap">${g.avatar||'⚽'} ${esc(g.name)}</button>`;
+      html+=`<button onclick="switchFmGroup('${g.id}')" style="flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid ${isActive?'var(--volt)':'var(--border)'};background:${isActive?'var(--volt-dim)':'var(--surface)'};font-family:'Inter',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:${isActive?'var(--volt)':'var(--muted)'};cursor:pointer;white-space:nowrap">${g.avatar||'⚽'} ${esc(g.name)}</button>`;
     });
     html+=`</div>`;
   }
@@ -1340,7 +1298,7 @@ function renderFeuille(){
       <button class="btn btn-outline" style="margin-bottom:10px" onclick="document.getElementById('fm-score-modal').style.display='flex'">Entrer le score</button>`;
     }
   } else {
-    html+=`<div style="text-align:center;font-family:'Sora',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:10px;background:var(--surface);border-radius:10px;border:1px solid var(--border)">Coche au moins 2 joueurs pour générer les équipes</div>`;
+    html+=`<div style="text-align:center;font-family:'Inter',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:10px;background:var(--surface);border-radius:10px;border:1px solid var(--border)">Coche au moins 2 joueurs pour générer les équipes</div>`;
   }
   html+=`<button class="btn btn-ghost" style="margin-top:8px" onclick="copyFmWA()">Copier feuille WhatsApp</button>
   <button class="btn btn-pink" onclick="resetFeuille()">Nouvelle feuille</button>`;
@@ -1569,7 +1527,7 @@ async function openPublicProfile(userId){
     document.body.appendChild(overlay);
   }
   overlay.innerHTML=`<div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:85vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom)">
-    <div style="text-align:center;padding:20px;color:var(--muted);font-family:'Sora',sans-serif;font-weight:700;letter-spacing:2px;text-transform:uppercase;font-size:12px">Chargement...</div>
+    <div style="text-align:center;padding:20px;color:var(--muted);font-family:'Inter',sans-serif;font-weight:700;letter-spacing:2px;text-transform:uppercase;font-size:12px">Chargement...</div>
   </div>`;
 
   try{
@@ -1631,7 +1589,7 @@ async function openPublicProfile(userId){
         <div style="font-family:'Sora',sans-serif;font-weight:900;font-size:24px;text-transform:uppercase;color:#fff">${esc(name)}</div>
         ${p.pseudo?`<div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:2px">@${esc(p.pseudo)}</div>`:''}
         ${p.code_postal?`<div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px">📍 ${esc(p.code_postal)}</div>`:''}
-        ${p.niveau?`<div style="margin-top:8px;display:inline-block;padding:4px 12px;border-radius:20px;background:rgba(255,255,255,0.1);font-family:'Sora',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;color:#fff">${niveauLabel[p.niveau]||''}</div>`:''}
+        ${p.niveau?`<div style="margin-top:8px;display:inline-block;padding:4px 12px;border-radius:20px;background:rgba(255,255,255,0.1);font-family:'Inter',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;color:#fff">${niveauLabel[p.niveau]||''}</div>`:''}
       </div>
 
       <div style="padding:0 16px 24px">
@@ -1642,17 +1600,17 @@ async function openPublicProfile(userId){
 
         <!-- Stats -->
         ${stats.g?`
-        <div style="font-family:'Sora',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Statistiques</div>
+        <div style="font-family:'Inter',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Statistiques</div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px">
-          <div class="card" style="text-align:center;padding:10px 4px"><div style="font-family:'Sora',sans-serif;font-size:22px;font-weight:900;color:var(--volt)">${stats.w}</div><div style="font-size:10px;color:var(--muted);font-family:'Sora',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Vic.</div></div>
-          <div class="card" style="text-align:center;padding:10px 4px"><div style="font-family:'Sora',sans-serif;font-size:22px;font-weight:900;color:var(--muted)">${stats.d}</div><div style="font-size:10px;color:var(--muted);font-family:'Sora',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Nul</div></div>
-          <div class="card" style="text-align:center;padding:10px 4px"><div style="font-family:'Sora',sans-serif;font-size:22px;font-weight:900;color:var(--pink)">${stats.l}</div><div style="font-size:10px;color:var(--muted);font-family:'Sora',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Déf.</div></div>
-          <div class="card" style="text-align:center;padding:10px 4px"><div style="font-family:'Sora',sans-serif;font-size:22px;font-weight:900;color:var(--volt)">${Math.round(stats.w/stats.g*100)}%</div><div style="font-size:10px;color:var(--muted);font-family:'Sora',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Win</div></div>
+          <div class="card" style="text-align:center;padding:10px 4px"><div style="font-family:'Sora',sans-serif;font-size:22px;font-weight:900;color:var(--volt)">${stats.w}</div><div style="font-size:10px;color:var(--muted);font-family:'Inter',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Vic.</div></div>
+          <div class="card" style="text-align:center;padding:10px 4px"><div style="font-family:'Sora',sans-serif;font-size:22px;font-weight:900;color:var(--muted)">${stats.d}</div><div style="font-size:10px;color:var(--muted);font-family:'Inter',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Nul</div></div>
+          <div class="card" style="text-align:center;padding:10px 4px"><div style="font-family:'Sora',sans-serif;font-size:22px;font-weight:900;color:var(--pink)">${stats.l}</div><div style="font-size:10px;color:var(--muted);font-family:'Inter',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Déf.</div></div>
+          <div class="card" style="text-align:center;padding:10px 4px"><div style="font-family:'Sora',sans-serif;font-size:22px;font-weight:900;color:var(--volt)">${Math.round(stats.w/stats.g*100)}%</div><div style="font-size:10px;color:var(--muted);font-family:'Inter',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Win</div></div>
         </div>`:''}
 
         <!-- Notes étoiles reçues -->
         ${starRatingsData.length?`
-        <div style="font-family:'Sora',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Évaluation des joueurs (${starRatingsData.length} vote${starRatingsData.length>1?'s':''})</div>
+        <div style="font-family:'Inter',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Évaluation des joueurs (${starRatingsData.length} vote${starRatingsData.length>1?'s':''})</div>
         <div class="card" style="display:flex;align-items:center;gap:14px;padding:16px;margin-bottom:14px">
           <div style="font-family:'Sora',sans-serif;font-weight:900;font-size:40px;color:var(--volt);line-height:1">${(starRatingsData.reduce((s,r)=>s+r.stars,0)/starRatingsData.length).toFixed(1)}</div>
           <div>
@@ -1664,31 +1622,31 @@ async function openPublicProfile(userId){
         </div>`:''}
 
         <!-- Notes reçues (matchs) -->
-        ${hasNotes?`<div style="font-family:'Sora',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Notes post-match (${noteCount} vote${noteCount>1?'s':''})</div>
+        ${hasNotes?`<div style="font-family:'Inter',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Notes post-match (${noteCount} vote${noteCount>1?'s':''})</div>
         <div class="card" style="margin-bottom:14px">
           ${[['⚔️ Attaque',(noteAtk/noteCount)],['🛡️ Défense',(noteDef/noteCount)],['💪 Physique',(notePhy/noteCount)]].map(([l,v])=>`
           <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">
-            <div style="font-size:12px;font-family:'Sora',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);min-width:80px">${l}</div>
+            <div style="font-size:12px;font-family:'Inter',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);min-width:80px">${l}</div>
             <div style="flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden"><div style="height:100%;width:${Math.round(v/5*100)}%;background:var(--volt);border-radius:3px"></div></div>
-            <div style="font-family:'Sora',sans-serif;font-weight:900;font-size:14px;color:var(--volt);min-width:28px;text-align:right">${v.toFixed(1)}</div>
+            <div style="font-family:'Inter',sans-serif;font-weight:900;font-size:14px;color:var(--volt);min-width:28px;text-align:right">${v.toFixed(1)}</div>
           </div>`).join('')}
         </div>`:''}
         ${badges.length?`
-        <div style="font-family:'Sora',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Badges</div>
+        <div style="font-family:'Inter',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Badges</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">${badges.map(b=>`<span style="font-size:12px;padding:4px 12px;border-radius:20px;background:var(--volt-dim);border:1px solid rgba(138,184,0,0.2);color:var(--volt)">${b}</span>`).join('')}</div>`:''}
 
         <!-- Historique -->
         ${history.length?`
-        <div style="font-family:'Sora',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Derniers matchs</div>
+        <div style="font-family:'Inter',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Derniers matchs</div>
         <div class="card" style="padding:4px 14px">${history.slice(0,8).map(h=>{
           const w=h.won;const d=h.draw;
           const col=d?'var(--muted)':w?'var(--volt)':'var(--pink)';
           const lbl=d?'NUL':w?'VIC':'DÉF';
           const date=new Date(h.match.date).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
           return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-            <span style="font-family:'Sora',sans-serif;font-weight:900;font-size:12px;color:${col};padding:2px 10px;border-radius:12px;background:${d?'var(--surface2)':w?'var(--volt-dim)':'var(--pink-dim)'}">${lbl}</span>
+            <span style="font-family:'Inter',sans-serif;font-weight:900;font-size:12px;color:${col};padding:2px 10px;border-radius:12px;background:${d?'var(--surface2)':w?'var(--volt-dim)':'var(--pink-dim)'}">${lbl}</span>
             <span style="font-size:12px;color:var(--muted)">${date}</span>
-            <span style="font-family:'Sora',sans-serif;font-weight:900;font-size:14px">${h.match.score_a}–${h.match.score_b}</span>
+            <span style="font-family:'Inter',sans-serif;font-weight:900;font-size:14px">${h.match.score_a}–${h.match.score_b}</span>
           </div>`;
         }).join('')}</div>`:''}
       </div>`;
@@ -1702,7 +1660,7 @@ async function renderResultats(){
   const el=document.getElementById('resultats-content');
   if(!currentUser){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)">Connecte-toi d\'abord.</div>';return;}
 
-  const togBtnStyle=(active)=>`flex:1;padding:8px;border-radius:8px;border:none;cursor:pointer;font-family:'Sora',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;background:${active?'var(--surface)':'transparent'};color:${active?'var(--text)':'var(--muted)'};box-shadow:${active?'0 1px 3px rgba(0,0,0,0.1)':'none'}`;
+  const togBtnStyle=(active)=>`flex:1;padding:8px;border-radius:8px;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;background:${active?'var(--surface)':'transparent'};color:${active?'var(--text)':'var(--muted)'};box-shadow:${active?'0 1px 3px rgba(0,0,0,0.1)':'none'}`;
 
   let html=`<div style="padding-top:12px">
   <div style="display:flex;background:var(--surface2);border-radius:10px;padding:3px;margin-bottom:14px">
@@ -1724,7 +1682,7 @@ async function renderResultats(){
 
   html+=`<div class="section-title" style="margin-top:0">Historique — ${matches.length} match${matches.length>1?'s':''}</div>`;
   if(!matches.length){
-    html+=`<div style="text-align:center;padding:24px;color:var(--muted);font-family:'Sora',sans-serif;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:1px">Aucun match enregistré</div>`;
+    html+=`<div style="text-align:center;padding:24px;color:var(--muted);font-family:'Inter',sans-serif;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:1px">Aucun match enregistré</div>`;
   } else {
     html+=matches.map(m=>{
       const w=m.score_a>m.score_b?'A':m.score_a<m.score_b?'B':'Nul';
@@ -1734,7 +1692,7 @@ async function renderResultats(){
       return `<div class="match-entry">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
           <div class="match-date" style="text-align:left;margin-bottom:0">${d}${m.lieu?' · '+esc(m.lieu):''}</div>
-          ${resultatsMode==='global'&&g?`<div style="font-size:10px;color:var(--muted);font-family:'Sora',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:0.5px">${g.avatar||'⚽'} ${esc(g.name)}</div>`:''}
+          ${resultatsMode==='global'&&g?`<div style="font-size:10px;color:var(--muted);font-family:'Inter',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:0.5px">${g.avatar||'⚽'} ${esc(g.name)}</div>`:''}
         </div>
         <div class="match-score" style="color:${col}">${m.score_a} — ${m.score_b}</div>
         <div class="match-teams">
@@ -1742,7 +1700,7 @@ async function renderResultats(){
           <div class="match-vs">VS</div>
           <div style="text-align:right"><div class="match-team-name mt-b">Éq. B${w==='B'?' ✓':''}</div><div class="match-players">${(m.team_b||[]).join(', ')}</div></div>
         </div>
-        <button onclick="deleteMatch(${m.id})" style="margin-top:10px;width:100%;padding:8px;background:transparent;border:1px solid var(--border);border-radius:8px;font-size:11px;font-weight:800;font-family:'Sora',sans-serif;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer">Supprimer</button>
+        <button onclick="deleteMatch(${m.id})" style="margin-top:10px;width:100%;padding:8px;background:transparent;border:1px solid var(--border);border-radius:8px;font-size:11px;font-weight:800;font-family:'Inter',sans-serif;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer">Supprimer</button>
       </div>`;
     }).join('');
   }
@@ -1779,8 +1737,8 @@ async function renderStats(){
   // Toggle UI
   let html=`<div style="padding-top:12px">
   <div style="display:flex;background:var(--surface2);border-radius:10px;padding:3px;margin-bottom:14px">
-    <button onclick="setStatsMode('global')" id="stats-btn-global" style="flex:1;padding:8px;border-radius:8px;border:none;cursor:pointer;font-family:'Sora',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;background:${statsMode==='global'?'var(--surface)':'transparent'};color:${statsMode==='global'?'var(--text)':'var(--muted)'};box-shadow:${statsMode==='global'?'0 1px 3px rgba(0,0,0,0.1)':'none'}">Toutes Squadras</button>
-    <button onclick="setStatsMode('squadra')" id="stats-btn-squadra" style="flex:1;padding:8px;border-radius:8px;border:none;cursor:pointer;font-family:'Sora',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;background:${statsMode==='squadra'?'var(--surface)':'transparent'};color:${statsMode==='squadra'?'var(--text)':'var(--muted)'};box-shadow:${statsMode==='squadra'?'0 1px 3px rgba(0,0,0,0.1)':'none'}">Cette Squadra</button>
+    <button onclick="setStatsMode('global')" id="stats-btn-global" style="flex:1;padding:8px;border-radius:8px;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;background:${statsMode==='global'?'var(--surface)':'transparent'};color:${statsMode==='global'?'var(--text)':'var(--muted)'};box-shadow:${statsMode==='global'?'0 1px 3px rgba(0,0,0,0.1)':'none'}">Toutes Squadras</button>
+    <button onclick="setStatsMode('squadra')" id="stats-btn-squadra" style="flex:1;padding:8px;border-radius:8px;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;background:${statsMode==='squadra'?'var(--surface)':'transparent'};color:${statsMode==='squadra'?'var(--text)':'var(--muted)'};box-shadow:${statsMode==='squadra'?'0 1px 3px rgba(0,0,0,0.1)':'none'}">Cette Squadra</button>
   </div>`;
 
   setSyncDot('loading');
@@ -1838,9 +1796,9 @@ async function renderStats(){
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:16px">${medals[i]||''}</span>
             <span style="font-size:18px">${p.e||'⚽'}</span>
-            <div style="font-family:'Sora',sans-serif;font-size:16px;font-weight:800;text-transform:uppercase">${esc(p.n)}</div>
+            <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:800;text-transform:uppercase">${esc(p.n)}</div>
           </div>
-          <div style="font-family:'Sora',sans-serif;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px">${s.g} match${s.g>1?'s':''}</div>
+          <div style="font-family:'Inter',sans-serif;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px">${s.g} match${s.g>1?'s':''}</div>
         </div>
         <div class="stat-bars">
           <div class="stat-col"><div class="stat-val stat-w">${s.w}</div><div class="stat-lbl">Victoires</div></div>
@@ -1890,22 +1848,22 @@ async function renderDashboard(){
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
         <div class="card" style="padding:16px">
           <div style="font-size:28px;margin-bottom:8px">📋</div>
-          <div style="font-family:'Sora',sans-serif;font-weight:900;font-size:15px;text-transform:uppercase;margin-bottom:4px">Feuille de match</div>
+          <div style="font-family:'Inter',sans-serif;font-weight:900;font-size:15px;text-transform:uppercase;margin-bottom:4px">Feuille de match</div>
           <div style="font-size:12px;color:var(--muted);line-height:1.5">Coche les présents, génère des équipes équilibrées en un tap.</div>
         </div>
         <div class="card" style="padding:16px">
           <div style="font-size:28px;margin-bottom:8px">⭐</div>
-          <div style="font-family:'Sora',sans-serif;font-weight:900;font-size:15px;text-transform:uppercase;margin-bottom:4px">Notes & stats</div>
+          <div style="font-family:'Inter',sans-serif;font-weight:900;font-size:15px;text-transform:uppercase;margin-bottom:4px">Notes & stats</div>
           <div style="font-size:12px;color:var(--muted);line-height:1.5">Note les joueurs, suis tes stats et construis ta réputation.</div>
         </div>
         <div class="card" style="padding:16px">
           <div style="font-size:28px;margin-bottom:8px">🏟</div>
-          <div style="font-family:'Sora',sans-serif;font-weight:900;font-size:15px;text-transform:uppercase;margin-bottom:4px">Tes Squadras</div>
+          <div style="font-family:'Inter',sans-serif;font-weight:900;font-size:15px;text-transform:uppercase;margin-bottom:4px">Tes Squadras</div>
           <div style="font-size:12px;color:var(--muted);line-height:1.5">Crée ton groupe, invite tes potes avec un simple code.</div>
         </div>
         <div class="card" style="padding:16px">
           <div style="font-size:28px;margin-bottom:8px">🤝</div>
-          <div style="font-family:'Sora',sans-serif;font-weight:900;font-size:15px;text-transform:uppercase;margin-bottom:4px">Profil public</div>
+          <div style="font-family:'Inter',sans-serif;font-weight:900;font-size:15px;text-transform:uppercase;margin-bottom:4px">Profil public</div>
           <div style="font-size:12px;color:var(--muted);line-height:1.5">Ton historique, tes badges et tes notes, visibles par tous.</div>
         </div>
       </div>
@@ -1990,7 +1948,7 @@ async function renderDashboard(){
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
           <div style="font-size:24px">${g.avatar||'⚽'}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-family:'Sora',sans-serif;font-weight:900;font-size:15px;text-transform:uppercase">${esc(g.name)}</div>
+            <div style="font-family:'Inter',sans-serif;font-weight:900;font-size:15px;text-transform:uppercase">${esc(g.name)}</div>
             <div style="font-size:12px;color:var(--muted);margin-top:2px">${d}${s.heure?' · '+s.heure:''}${s.lieu?' · '+esc(s.lieu):''}</div>
           </div>
           <div style="font-family:'Sora',sans-serif;font-weight:900;font-size:20px;color:${presCount>=cap?'var(--pink)':'var(--volt)'}">${presCount}/${cap}</div>
@@ -2011,19 +1969,19 @@ async function renderDashboard(){
     html+=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:4px">
       <div class="card" style="text-align:center;padding:12px 6px">
         <div style="font-family:'Sora',sans-serif;font-size:26px;font-weight:900;color:var(--volt)">${myStats.w}</div>
-        <div style="font-size:10px;color:var(--muted);font-family:'Sora',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Vic.</div>
+        <div style="font-size:10px;color:var(--muted);font-family:'Inter',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Vic.</div>
       </div>
       <div class="card" style="text-align:center;padding:12px 6px">
         <div style="font-family:'Sora',sans-serif;font-size:26px;font-weight:900;color:var(--muted)">${myStats.d}</div>
-        <div style="font-size:10px;color:var(--muted);font-family:'Sora',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Nul</div>
+        <div style="font-size:10px;color:var(--muted);font-family:'Inter',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Nul</div>
       </div>
       <div class="card" style="text-align:center;padding:12px 6px">
         <div style="font-family:'Sora',sans-serif;font-size:26px;font-weight:900;color:var(--pink)">${myStats.l}</div>
-        <div style="font-size:10px;color:var(--muted);font-family:'Sora',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Déf.</div>
+        <div style="font-size:10px;color:var(--muted);font-family:'Inter',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Déf.</div>
       </div>
       <div class="card" style="text-align:center;padding:12px 6px">
         <div style="font-family:'Sora',sans-serif;font-size:26px;font-weight:900;color:var(--volt)">${Math.round(myStats.w/myStats.g*100)}%</div>
-        <div style="font-size:10px;color:var(--muted);font-family:'Sora',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Win</div>
+        <div style="font-size:10px;color:var(--muted);font-family:'Inter',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">Win</div>
       </div>
     </div>
     <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:14px">${myStats.g} match${myStats.g>1?'s':''} · toutes Squadras confondues</div>`;
@@ -2179,7 +2137,7 @@ function renderProfileEdit(el, isNew=false){
   </div>
 
   ${isNew?`<div style="background:rgba(138,184,0,0.1);border:1px solid rgba(138,184,0,0.25);border-radius:16px;padding:20px;margin-bottom:12px">
-    <div style="font-family:'Sora',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--volt);margin-bottom:6px">Étape importante</div>
+    <div style="font-family:'Inter',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--volt);margin-bottom:6px">Étape importante</div>
     <div style="font-size:13px;color:var(--text);margin-bottom:14px;line-height:1.5">Définis un mot de passe pour te connecter facilement la prochaine fois.</div>
     <label class="field-label">Nouveau mot de passe</label>
     <input type="password" class="fld" id="pf-newpwd" placeholder="Minimum 8 caractères" style="margin-bottom:8px">
@@ -2189,18 +2147,18 @@ function renderProfileEdit(el, isNew=false){
   </div>`:''}
 
   <div class="auth-card" style="margin-bottom:12px">
-    <div style="font-family:'Sora',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Avatar</div>
+    <div style="font-family:'Inter',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Avatar</div>
     <div style="font-size:40px;text-align:center;margin-bottom:10px" id="avatar-big">${editAvatar}</div>
     <div class="avatar-grid">${AVATAR_OPTS.map(a=>`<div onclick="pickAvatar('${a}')" class="avatar-opt${a===editAvatar?' selected':''}" id="av-${a}">${a}</div>`).join('')}</div>
   </div>
 
   <div class="auth-card" style="margin-bottom:12px">
-    <div style="font-family:'Sora',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Identité</div>
+    <div style="font-family:'Inter',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Identité</div>
     ${['prenom:Prénom','nom:Nom','pseudo:Pseudo','code_postal:Code postal'].map(f=>{const[k,l]=f.split(':');return`<div style="margin-bottom:10px"><label class="field-label">${l}</label><input type="text" class="fld" id="pf-${k}" value="${esc(p[k]||'')}" placeholder="${l}"></div>`;}).join('')}
     <div style="margin-bottom:10px">
       <label class="field-label">Niveau de jeu</label>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px" id="niv-picker">
-        ${[['debutant','🌱 Débutant'],['intermediaire','⚡ Intermédiaire'],['confirme','🔥 Confirmé'],['avance','💎 Avancé'],['expert','👑 Expert']].map(([v,l])=>`<button type="button" onclick="pickNiveau('${v}')" id="niv-${v}" style="padding:6px 12px;border-radius:20px;border:1px solid ${(p.niveau||'')===v?'var(--volt)':'var(--border)'};background:${(p.niveau||'')===v?'var(--volt-dim)':'transparent'};font-family:'Sora',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:${(p.niveau||'')===v?'var(--volt)':'var(--muted)'};cursor:pointer">${l}</button>`).join('')}
+        ${[['debutant','🌱 Débutant'],['intermediaire','⚡ Intermédiaire'],['confirme','🔥 Confirmé'],['avance','💎 Avancé'],['expert','👑 Expert']].map(([v,l])=>`<button type="button" onclick="pickNiveau('${v}')" id="niv-${v}" style="padding:6px 12px;border-radius:20px;border:1px solid ${(p.niveau||'')===v?'var(--volt)':'var(--border)'};background:${(p.niveau||'')===v?'var(--volt-dim)':'transparent'};font-family:'Inter',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:${(p.niveau||'')===v?'var(--volt)':'var(--muted)'};cursor:pointer">${l}</button>`).join('')}
       </div>
     </div>
     <label class="field-label">Description</label>
@@ -2208,7 +2166,7 @@ function renderProfileEdit(el, isNew=false){
   </div>
 
   ${!isNew?`<div class="auth-card" style="margin-bottom:12px">
-    <div style="font-family:'Sora',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Changer le mot de passe</div>
+    <div style="font-family:'Inter',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Changer le mot de passe</div>
     <input type="password" class="fld" id="pf-newpwd" placeholder="Nouveau mot de passe" style="margin-bottom:8px">
     <input type="password" class="fld" id="pf-newpwd2" placeholder="Confirme" style="margin-bottom:12px">
     <button class="btn btn-ghost" onclick="handleSetPassword()" style="margin-bottom:0">Mettre à jour</button>
@@ -2329,7 +2287,7 @@ async function openRatingsPage(){
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
           <div style="font-size:22px;width:36px;height:36px;background:var(--surface2);border-radius:50%;display:flex;align-items:center;justify-content:center">${m.e||'⚽'}</div>
           <div>
-            <div style="font-family:'Sora',sans-serif;font-weight:700;font-size:15px;text-transform:uppercase">${esc(m.n)}</div>
+            <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:15px;text-transform:uppercase">${esc(m.n)}</div>
             ${m.niveau?`<div style="font-size:11px;color:var(--muted)">${{debutant:'🌱',intermediaire:'⚡',confirme:'🔥',avance:'💎',expert:'👑'}[m.niveau]||''} ${m.niveau}</div>`:''}
           </div>
           <div style="margin-left:auto;font-family:'Sora',sans-serif;font-weight:900;font-size:18px;color:var(--volt)" id="star-val-${m.id}">${currentStars>0?currentStars.toFixed(1)+'★':'—'}</div>
@@ -2411,7 +2369,7 @@ async function initRatingPage(matchId){
     const match=matches[0];
     const allPlayers=[...(match.team_a||[]),...(match.team_b||[])];
     const d=new Date(match.date).toLocaleDateString('fr-FR',{day:'numeric',month:'long'});
-    el.innerHTML=`<div style="text-align:center;padding:24px 0 16px"><div style="font-size:36px">⭐</div><div style="font-family:'Sora',sans-serif;font-weight:900;font-size:22px;text-transform:uppercase;margin-top:8px">Notation du match</div><div style="font-size:13px;color:var(--muted);margin-top:4px">${d} — ${match.score_a} - ${match.score_b}</div></div><div class="info-box">Sélectionne ton prénom pour noter tes coéquipiers.</div><div style="display:flex;flex-direction:column;gap:8px">${allPlayers.map(name=>`<button onclick="startRating(${matchId},'${name.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;font-family:'Sora',sans-serif;font-size:16px;font-weight:700;text-transform:uppercase;color:var(--text);text-align:left;width:100%"><span style="font-size:24px">⚽</span><span>${esc(name)}</span></button>`).join('')}</div>`;
+    el.innerHTML=`<div style="text-align:center;padding:24px 0 16px"><div style="font-size:36px">⭐</div><div style="font-family:'Sora',sans-serif;font-weight:900;font-size:22px;text-transform:uppercase;margin-top:8px">Notation du match</div><div style="font-size:13px;color:var(--muted);margin-top:4px">${d} — ${match.score_a} - ${match.score_b}</div></div><div class="info-box">Sélectionne ton prénom pour noter tes coéquipiers.</div><div style="display:flex;flex-direction:column;gap:8px">${allPlayers.map(name=>`<button onclick="startRating(${matchId},'${name.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;font-family:'Inter',sans-serif;font-size:16px;font-weight:700;text-transform:uppercase;color:var(--text);text-align:left;width:100%"><span style="font-size:24px">⚽</span><span>${esc(name)}</span></button>`).join('')}</div>`;
   }catch(e){el.innerHTML='<p style="color:var(--pink);text-align:center;padding:40px">Erreur.</p>';}
 }
 
@@ -2429,7 +2387,7 @@ async function startRating(matchId,joueurName){
     ratingScores={};toRate.forEach(n=>{ratingScores[n]={atk:0,def:0,phy:0};});
     let html=`<div style="display:flex;align-items:center;gap:10px;padding:16px 0 12px"><button onclick="initRatingPage(${matchId})" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted)">←</button><div><div style="font-family:'Sora',sans-serif;font-weight:900;font-size:18px;text-transform:uppercase">⚽ ${esc(joueurName)}</div><div style="font-size:12px;color:var(--muted)">Match du ${d}</div></div></div>`;
     html+=`<div class="info-box">Note chaque joueur (1 à 5 ★). Anonyme.</div>`;
-    toRate.forEach(name=>{const sid=name.replace(/[^a-zA-Z0-9]/g,'_');html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px" id="rc-${sid}"><div style="font-family:'Sora',sans-serif;font-weight:800;font-size:16px;text-transform:uppercase;margin-bottom:10px">⚽ ${esc(name)}</div>${[{k:'atk',l:'Attaque'},{k:'def',l:'Défense'},{k:'phy',l:'Physique'}].map(({k,l})=>`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-family:'Sora',sans-serif;font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">${l}</span><div id="stars-${sid}-${k}" style="display:flex;gap:4px">${[1,2,3,4,5].map(v=>`<span onclick="setStar('${sid}','${k}','${name.replace(/'/g,"\\'")}',${v})" style="font-size:26px;cursor:pointer;color:var(--surface3)">★</span>`).join('')}</div></div>`).join('')}</div>`;});
+    toRate.forEach(name=>{const sid=name.replace(/[^a-zA-Z0-9]/g,'_');html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px" id="rc-${sid}"><div style="font-family:'Inter',sans-serif;font-weight:800;font-size:16px;text-transform:uppercase;margin-bottom:10px">⚽ ${esc(name)}</div>${[{k:'atk',l:'Attaque'},{k:'def',l:'Défense'},{k:'phy',l:'Physique'}].map(({k,l})=>`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-family:'Inter',sans-serif;font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">${l}</span><div id="stars-${sid}-${k}" style="display:flex;gap:4px">${[1,2,3,4,5].map(v=>`<span onclick="setStar('${sid}','${k}','${name.replace(/'/g,"\\'")}',${v})" style="font-size:26px;cursor:pointer;color:var(--surface3)">★</span>`).join('')}</div></div>`).join('')}</div>`;});
     html+=`<button class="btn btn-volt" onclick="submitRatings(${matchId},'${joueurName.replace(/'/g,"\\'")}')">Envoyer mes notes</button>`;
     el.innerHTML=html;
   }catch(e){el.innerHTML='<p style="color:var(--pink);text-align:center;padding:40px">Erreur.</p>';}
