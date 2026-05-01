@@ -1059,29 +1059,43 @@ async function handleJoinGroup(){
 async function joinPendingInvite(){
   const code=localStorage.getItem('sq_pending_invite');
   if(!code||!currentUser) return;
-  localStorage.removeItem('sq_pending_invite');
-  // Nettoyer l'URL
-  const url=new URL(window.location.href);
-  url.searchParams.delete('invite');
-  window.history.replaceState(null,'',url.toString());
+  const token=localStorage.getItem('sq_token');
+  if(!token) return;
   try{
-    const token=localStorage.getItem('sq_token');
+    // Nettoyer l'URL
+    const url=new URL(window.location.href);
+    url.searchParams.delete('invite');
+    window.history.replaceState(null,'',url.toString());
+    localStorage.removeItem('sq_pending_invite');
+
+    // Trouver le groupe
     const gRes=await fetch(SUPA_URL+'/rest/v1/groups?invite_code=eq.'+encodeURIComponent(code),{
       headers:{...HEADERS,'Authorization':'Bearer '+token}
     });
     const groups=await gRes.json();
-    if(!groups.length) return;
+    if(!groups.length){showToast('Code d\'invitation invalide',true);return;}
     const group=groups[0];
+
     // Déjà membre ?
-    if(GROUPS.find(g=>g.id===group.id)) return;
+    if(GROUPS.find(g=>g.id===group.id)){
+      showToast('Tu es déjà dans cette Squadra !');
+      const g=GROUPS.find(g=>g.id===group.id);
+      await setActiveGroup(g);
+      return;
+    }
+
+    // Rejoindre
     await fetch(SUPA_URL+'/rest/v1/group_members',{
       method:'POST',
       headers:{...HEADERS,'Authorization':'Bearer '+token,'Prefer':'resolution=ignore-duplicates,return=minimal','Content-Type':'application/json'},
       body:JSON.stringify({group_id:group.id,user_id:currentUser.id,role:'member'})
     });
     await loadGroups();
-    showToast('Tu as rejoint : '+group.name+' 🎉');
-    if(activeGroup?.id===group.id) switchPage('groupes','nav-groupes');
+    showToast('Bienvenue dans '+group.name+' ! 🎉');
+    // Activer ce groupe et aller sur la feuille
+    const joinedGroup=GROUPS.find(g=>g.id===group.id);
+    if(joinedGroup) await setActiveGroup(joinedGroup);
+    else switchPage('groupes','nav-groupes');
   }catch(e){console.warn('joinPendingInvite:',e);}
 }
 
@@ -1822,10 +1836,35 @@ async function setStatsMode(mode){
 async function renderDashboard(){
   const el=document.getElementById('dashboard-content');
   if(!currentUser){
+    const pendingInvite=localStorage.getItem('sq_pending_invite');
+    // Charger le nom du groupe si on a un code d'invitation
+    let inviteGroupName='';
+    if(pendingInvite){
+      try{
+        const r=await fetch(SUPA_URL+'/rest/v1/groups?invite_code=eq.'+encodeURIComponent(pendingInvite)+'&select=name,avatar',{headers:HEADERS});
+        const groups=await r.json();
+        if(groups.length) inviteGroupName=groups[0].avatar+' '+groups[0].name;
+      }catch(e){}
+    }
+
     el.innerHTML=`
     <div style="padding-top:8px">
+      ${pendingInvite?`
+      <!-- Bannière invitation -->
+      <div style="background:var(--neon-dim);border:1px solid rgba(182,255,0,0.25);border-radius:16px;padding:20px;margin-bottom:14px;text-align:center">
+        <div style="font-size:32px;margin-bottom:8px">🏟</div>
+        <div style="font-family:'Sora',sans-serif;font-weight:800;font-size:18px;text-transform:uppercase;color:var(--neon);margin-bottom:6px">Tu es invité !</div>
+        ${inviteGroupName?`<div style="font-size:14px;color:var(--text);margin-bottom:12px">Rejoins la Squadra <strong>${esc(inviteGroupName)}</strong></div>`:'<div style="font-size:14px;color:var(--muted);margin-bottom:12px">Crée ton compte pour rejoindre la Squadra</div>'}
+        <button class="btn btn-volt" onclick="switchPage('profil',null)" style="margin:0 auto;max-width:240px">
+          Créer mon compte →
+        </button>
+        <div style="margin-top:10px;font-size:12px;color:var(--muted)">
+          Déjà inscrit ? <span onclick="switchPage('profil',null)" style="color:var(--neon);cursor:pointer;text-decoration:underline">Se connecter</span>
+        </div>
+      </div>`:''}
+
       <!-- Hero -->
-      <div style="background:var(--hbg);border-radius:20px;padding:32px 24px;margin-bottom:14px;position:relative;overflow:hidden">
+      <div style="background:var(--surface);border-radius:20px;padding:32px 24px;margin-bottom:14px;position:relative;overflow:hidden;border:1px solid var(--border)">
         <div style="position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;background:rgba(200,255,0,0.08);pointer-events:none"></div>
         <div style="position:absolute;bottom:-40px;left:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,45,120,0.06);pointer-events:none"></div>
         <div style="font-family:'Sora',sans-serif;font-weight:900;font-size:36px;line-height:1.05;text-transform:uppercase;letter-spacing:-0.5px;color:#fff;margin-bottom:16px;position:relative;z-index:1">
